@@ -27,7 +27,7 @@ module.exports = api => {
       },
     ],
     // ['module:react-native-dotenv'],
-    // ['react-native-paper/babel'],
+    ['react-native-paper/babel'],
   ];
   //change to 'production' to check if this is working in 'development' mode
   if (babelEnv !== 'development') {
@@ -35,6 +35,6 @@ module.exports = api => {
   }
   return {
     presets: ['module:metro-react-native-babel-preset'],
-    plugins: [...plugins, 'react-native-reanimated/plugin'],
+    plugins: [...plugins, 'optional-require', 'react-native-reanimated/plugin'],
   };
 };

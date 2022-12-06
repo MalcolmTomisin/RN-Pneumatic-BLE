@@ -8,3 +8,10 @@ export const appRoutes = createEnum({
   DASHBOARD: 'DASHBOARD',
   ONBOARD: 'ONBOARD',
 });
+
+export {
+  CombinedDefaultTheme,
+  CombinedDarkTheme,
+  appColors,
+  appFonts,
+} from './globalStyles';
