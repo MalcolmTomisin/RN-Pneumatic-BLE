@@ -53,6 +53,9 @@ export const CombinedDarkTheme = {
 
 export const appColors = {
   blueprimary: '#0078C1',
+  black: '#000000',
+  white: '#fff',
+  shade3: '#959595',
 };
 
 export const appFonts = {
