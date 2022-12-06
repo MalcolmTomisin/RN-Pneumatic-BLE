@@ -19,5 +19,6 @@ export default StyleSheet.create({
     fontSize: normalize(16),
     lineHeight: normalize(16 * 1.7),
     fontFamily: appFonts.BARLOW_RG,
+    marginTop: normalize(8),
   },
 });
