@@ -7,7 +7,10 @@ const Stack = createNativeStackNavigator();
 
 export default function OnboardStack() {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}>
       <Stack.Screen name={appRoutes.LOGIN} component={Login} />
     </Stack.Navigator>
   );

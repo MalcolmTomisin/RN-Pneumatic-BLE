@@ -9,7 +9,10 @@ const Stack = createNativeStackNavigator();
 export default function AppNavigator() {
   return (
     // #TODO wire up global state to handle authentication
-    <Stack.Navigator>
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}>
       {true ? (
         <Stack.Screen name={appRoutes.ONBOARD} component={Onboard} />
       ) : (
