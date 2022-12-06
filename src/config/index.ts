@@ -34,6 +34,13 @@ export const appRoutes = createEnum({
   ONBOARD: 'ONBOARD',
 });
 
+export const appConfig = {
+  IS_IOS: Platform.OS === 'ios',
+  IS_ANDROID: Platform.OS === 'android',
+  SCREEN_HEIGHT: SCREEN_HEIGHT,
+  SCREEN_WIDTH: SCREEN_WIDTH,
+};
+
 export {
   CombinedDefaultTheme,
   CombinedDarkTheme,
