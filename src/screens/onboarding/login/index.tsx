@@ -1,10 +1,16 @@
 import React, {useState} from 'react';
 import {View, StatusBar, useColorScheme, Text} from 'react-native';
-import {appColors, CombinedDarkTheme, CombinedDefaultTheme} from 'src/config';
-import styles from './styles';
+import {
+  appColors,
+  appRoutes,
+  CombinedDarkTheme,
+  CombinedDefaultTheme,
+} from 'src/config';
+import styles from '../styles';
 import {TextInput, Button} from 'src/components';
+import type {LoginScreenProps} from 'src/navigators/onboarding/types';
 
-export default function Login() {
+export default function Login({navigation}: LoginScreenProps) {
   const darkMode = useColorScheme() === 'dark';
   const [secure, setSecure] = useState<boolean>(true);
   return (
@@ -39,7 +45,13 @@ export default function Login() {
         <Text style={styles.terms}>Terms & Conditions</Text> and privacy policy
         of Smart Brace Technology by Spinal Technology
       </Text>
-      <Button style={styles.btn}>Log In</Button>
+      <Button
+        onPress={() => {
+          navigation.navigate(appRoutes.AUTH);
+        }}
+        style={styles.btn}>
+        Log In
+      </Button>
       <Text style={styles.forgot}>
         Forgot Password? <Text style={styles.recover}>Recover Password</Text>
       </Text>
