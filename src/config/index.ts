@@ -32,6 +32,7 @@ export const appRoutes = createEnum({
   HOME: 'HOME',
   DASHBOARD: 'DASHBOARD',
   ONBOARD: 'ONBOARD',
+  AUTH: 'AUTH',
 });
 
 export const appConfig = {
