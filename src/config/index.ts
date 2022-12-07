@@ -33,6 +33,7 @@ export const appRoutes = createEnum({
   DASHBOARD: 'DASHBOARD',
   ONBOARD: 'ONBOARD',
   AUTH: 'AUTH',
+  RECOVER_PASSWORD: 'RECOVER_PASSWORD',
 });
 
 export const appConfig = {

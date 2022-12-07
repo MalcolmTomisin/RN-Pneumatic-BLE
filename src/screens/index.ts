@@ -1,2 +1,2 @@
-export {Login, Auth} from './onboarding';
+export {Login, Auth, Recover} from './onboarding';
 export {Home} from './dashboard';

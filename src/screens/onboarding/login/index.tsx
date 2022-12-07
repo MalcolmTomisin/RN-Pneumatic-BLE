@@ -52,7 +52,11 @@ export default function Login({navigation}: LoginScreenProps) {
         style={styles.btn}>
         Log In
       </Button>
-      <Text style={styles.forgot}>
+      <Text
+        onPress={() => {
+          navigation.navigate(appRoutes.RECOVER_PASSWORD);
+        }}
+        style={styles.forgot}>
         Forgot Password? <Text style={styles.recover}>Recover Password</Text>
       </Text>
     </View>
