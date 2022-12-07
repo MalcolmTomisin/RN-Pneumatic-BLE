@@ -65,7 +65,7 @@ const App = () => {
   }, [restoreState]);
 
   if (!isReady && appConfig.IS_ANDROID) {
-    return <View style={{flex: 1, backgroundColor: appColors.blueprimary}} />;
+    return <View style={{flex: 1, backgroundColor: appColors.background}} />;
   }
 
   return (
