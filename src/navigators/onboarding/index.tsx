@@ -12,9 +12,27 @@ export default function OnboardStack() {
       screenOptions={{
         headerShown: false,
       }}>
-      <Stack.Screen name={appRoutes.LOGIN} component={Login} />
-      <Stack.Screen name={appRoutes.AUTH} component={Auth} />
-      <Stack.Screen name={appRoutes.RECOVER_PASSWORD} component={Recover} />
+      <Stack.Screen
+        options={{
+          animation: 'fade',
+        }}
+        name={appRoutes.LOGIN}
+        component={Login}
+      />
+      <Stack.Screen
+        options={{
+          animation: 'slide_from_right',
+        }}
+        name={appRoutes.AUTH}
+        component={Auth}
+      />
+      <Stack.Screen
+        options={{
+          animation: 'slide_from_bottom',
+        }}
+        name={appRoutes.RECOVER_PASSWORD}
+        component={Recover}
+      />
     </Stack.Navigator>
   );
 }
