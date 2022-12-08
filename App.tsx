@@ -28,6 +28,7 @@ import {
 } from 'src/config';
 import {MMKV} from 'react-native-mmkv';
 import {storage, PERSISTENCE_KEY} from 'src/utils';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
 
 const App = () => {
   const isDarkMode = useColorScheme() === 'dark';
@@ -69,14 +70,16 @@ const App = () => {
   }
 
   return (
-    <PaperProvider theme={theme}>
-      <NavigationContainer
-        initialState={initialState}
-        onStateChange={handleStateChange}
-        theme={theme}>
-        <AppNavigator />
-      </NavigationContainer>
-    </PaperProvider>
+    <GestureHandlerRootView style={{flex: 1}}>
+      <PaperProvider theme={theme}>
+        <NavigationContainer
+          initialState={initialState}
+          onStateChange={handleStateChange}
+          theme={theme}>
+          <AppNavigator />
+        </NavigationContainer>
+      </PaperProvider>
+    </GestureHandlerRootView>
   );
 };
 
