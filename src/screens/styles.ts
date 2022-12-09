@@ -49,4 +49,9 @@ export default StyleSheet.create({
     fontFamily: appFonts.BARLOW_BD,
     color: appColors.blueprimary,
   },
+  outline_btn: {
+    backgroundColor: appColors.white,
+    borderWidth: 1,
+    borderColor: appColors.blueprimary,
+  },
 });
