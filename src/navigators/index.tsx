@@ -4,7 +4,12 @@ import {appRoutes} from 'src/config';
 import Dashboard from './dashboard';
 import Onboard from './onboarding';
 
-const Stack = createNativeStackNavigator();
+export type RootStackParams = {
+  ONBOARD: undefined;
+  DASHBOARD: undefined;
+};
+
+const Stack = createNativeStackNavigator<RootStackParams>();
 
 export default function AppNavigator() {
   return (
@@ -13,7 +18,7 @@ export default function AppNavigator() {
       screenOptions={{
         headerShown: false,
       }}>
-      {true ? (
+      {false ? (
         <Stack.Screen name={appRoutes.ONBOARD} component={Onboard} />
       ) : (
         <Stack.Screen name={appRoutes.DASHBOARD} component={Dashboard} />

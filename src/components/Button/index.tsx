@@ -13,8 +13,8 @@ export default function IButton(
     <Button
       contentStyle={[styles.button, props.contentStyle]}
       labelStyle={[styles.buttontext, props.labelStyle]}
-      mode="contained"
       uppercase={false}
+      mode="contained"
       {...props}>
       {props.children}
     </Button>

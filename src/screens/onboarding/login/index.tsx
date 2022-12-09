@@ -6,7 +6,7 @@ import {
   CombinedDarkTheme,
   CombinedDefaultTheme,
 } from 'src/config';
-import styles from '../styles';
+import styles from '../../styles';
 import {TextInput, Button} from 'src/components';
 import type {LoginScreenProps} from 'src/navigators/onboarding/types';
 

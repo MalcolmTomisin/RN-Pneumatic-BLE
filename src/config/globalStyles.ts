@@ -60,6 +60,7 @@ export const appColors = {
   label_black: '#0F0F0F',
   placeholder_grey: '#686868',
   background: '#F3F9FD',
+  disabled_grey: '#BCBCBC',
 };
 
 export const appFonts = {

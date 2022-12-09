@@ -1,7 +1,7 @@
 import React from 'react';
 import {View, Text} from 'react-native';
 import {appColors, normalize} from 'src/config';
-import styles from '../styles';
+import styles from '../../styles';
 import {TextInput, Button} from 'src/components';
 import type {RecoverScreenProps} from 'src/navigators/onboarding/types';
 
