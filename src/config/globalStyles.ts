@@ -61,6 +61,13 @@ export const appColors = {
   placeholder_grey: '#686868',
   background: '#F3F9FD',
   disabled_grey: '#BCBCBC',
+  torquiose_green: '#159183',
+  shade1: '#3D3D3D',
+  neutral_grey1: '#E4E4E4',
+  grey_2: '#767676',
+  background_grey: '#FAFAFA',
+  cancel_pink: '#FCF2F2',
+  cancel_red: '#BB0000',
 };
 
 export const appFonts = {

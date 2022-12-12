@@ -1,12 +1,12 @@
 import React from 'react';
 import {createDrawerNavigator} from '@react-navigation/drawer';
 import {Text, StyleSheet, Image, View} from 'react-native';
-import {Profile} from 'src/screens/dashboard';
 import {appColors, appFonts, appRoutes, normalize} from 'src/config';
 import profile from 'assets/images/ic_profile.png';
 import exit from 'assets/images/exit.png';
 import compass from 'assets/images/compass.png';
 import DeviceStack from './connect';
+import ProfileStack from './profile';
 
 const Drawer = createDrawerNavigator();
 const Logout = () => <View />;
@@ -71,7 +71,7 @@ export default function DashboardStack() {
                     : appColors.placeholder_grey,
                 },
               ]}>
-              Profile
+              My Profile
             </Text>
           ),
           drawerIcon: ({focused}) => (
@@ -88,8 +88,8 @@ export default function DashboardStack() {
             />
           ),
         }}
-        name={appRoutes.Profile}
-        component={Profile}
+        name={appRoutes['My Profile']}
+        component={ProfileStack}
       />
       <Drawer.Screen
         name="Log Out"

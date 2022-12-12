@@ -37,5 +37,9 @@ export default StyleSheet.create({
   },
   inputText: {
     flex: 1,
+    color: appColors.label_black,
+    fontFamily: appFonts.BARLOW_MD,
+    fontSize: normalize(16),
+    lineHeight: normalize(16 * 1.7),
   },
 });

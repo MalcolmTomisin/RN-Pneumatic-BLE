@@ -34,10 +34,13 @@ export const appRoutes = createEnum({
   ONBOARD: 'ONBOARD',
   AUTH: 'AUTH',
   RECOVER_PASSWORD: 'RECOVER_PASSWORD',
-  Profile: 'Profile',
+  'My Profile': 'My Profile',
   Device: 'Device',
   Scan: 'Scan',
   DeviceConnect: 'DeviceConnect',
+  'Edit Details': 'Edit Details',
+  'Change Password': 'Change Password',
+  'Profile Home': 'Profile Home',
 });
 
 export const appConfig = {
