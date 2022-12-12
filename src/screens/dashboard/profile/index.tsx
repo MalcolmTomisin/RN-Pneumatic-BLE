@@ -9,9 +9,16 @@ import {
   StatusBar,
   useColorScheme,
 } from 'react-native';
-import {TabView, SceneMap, TabBar} from 'react-native-tab-view';
+import {TabView, TabBar} from 'react-native-tab-view';
 import {Avatar, Switch} from 'react-native-paper';
-import {appFonts, normalize, appColors, appRoutes, CombinedDarkTheme, CombinedDefaultTheme} from 'src/config';
+import {
+  appFonts,
+  normalize,
+  appColors,
+  appRoutes,
+  CombinedDarkTheme,
+  CombinedDefaultTheme,
+} from 'src/config';
 import ic_edit from 'assets/images/ic_edit.png';
 import ic_shield from 'assets/images/ic_shield.png';
 import {Picker} from '@react-native-picker/picker';

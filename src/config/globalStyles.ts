@@ -68,6 +68,8 @@ export const appColors = {
   background_grey: '#FAFAFA',
   cancel_pink: '#FCF2F2',
   cancel_red: '#BB0000',
+  profile_input_border: '#9ABACD',
+  profile_input: '#F0F9FF',
 };
 
 export const appFonts = {
