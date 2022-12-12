@@ -24,14 +24,19 @@ export default forwardRef<
     isPassword?: boolean;
     containerStyle?: StyleProp<ViewStyle>;
     rightIcon?: React.ReactNode;
-    toggleSecure?: () => void;
+    toggleSecure?:() => void;
   }
 >(function Input(props, ref) {
   const [focused, setFocused] = useState<boolean>(false);
   return (
     <View style={[styles.container, props.containerStyle]}>
       <Text style={[styles.label, props.labelStyle]}>{props.label}</Text>
-      <View style={[styles.input, focused ? styles.focused : styles.unfocused]}>
+      <View
+        style={[
+          styles.input,
+          focused ? styles.focused : styles.unfocused,
+          props.inputContainerStyle,
+        ]}>
         <TextInput
           {...props}
           onFocus={e => {
@@ -43,7 +48,7 @@ export default forwardRef<
             setFocused(false);
           }}
           ref={ref}
-          style={styles.inputText}
+          style={[styles.inputText, props.inputStyle]}
         />
 
         {props.isPassword ? (
