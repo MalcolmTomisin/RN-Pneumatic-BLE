@@ -1,10 +1,11 @@
 import React from 'react';
 import {View, Text} from 'react-native';
 import {Button} from 'src/components';
-import {normalizeHeight, normalize, appColors} from 'src/config';
+import {normalizeHeight, normalize, appColors, appRoutes} from 'src/config';
 import styles from 'src/screens/styles';
+import type {ScanScreenProps} from 'src/navigators/dashboard/connect/types';
 
-export default function ScannedDevices() {
+export default function ScannedDevices({navigation}: ScanScreenProps) {
   return (
     <View style={styles.container}>
       <Text style={styles.bold}>Scanned Devices</Text>
@@ -13,6 +14,9 @@ export default function ScannedDevices() {
       </Text>
       <View style={{marginTop: normalizeHeight(328)}}>
         <Button
+          onPress={() => {
+            navigation.navigate(appRoutes['Scanned Devices']);
+          }}
           style={[
             {
               marginBottom: normalize(24),

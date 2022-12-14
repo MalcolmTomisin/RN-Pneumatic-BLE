@@ -2,7 +2,7 @@ import React from 'react';
 import {View, Text} from 'react-native';
 import styles from '../../styles';
 import {TextInput, Button} from 'src/components';
-import {appColors, normalize} from 'src/config';
+import {appColors, normalize, appRoutes} from 'src/config';
 import type {AuthScreenProps} from 'src/navigators/onboarding/types';
 
 export default function AuthScreen({navigation}: AuthScreenProps) {
@@ -31,7 +31,12 @@ export default function AuthScreen({navigation}: AuthScreenProps) {
         Didn’t get the code? <Text style={styles.recover}>Send a new Code</Text>
       </Text>
 
-      <Button>Validate</Button>
+      <Button
+        onPress={() => {
+          navigation.navigate(appRoutes.DASHBOARD);
+        }}>
+        Validate
+      </Button>
     </View>
   );
 }

@@ -124,11 +124,12 @@ export default function DashboardStack() {
           ),
         }}
         component={Logout}
-        listeners={{
+        listeners={({navigation}) => ({
           drawerItemPress: e => {
             e.preventDefault();
+            navigation.navigate(appRoutes.ONBOARD);
           },
-        }}
+        })}
       />
     </Drawer.Navigator>
   );

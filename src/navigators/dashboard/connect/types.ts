@@ -6,6 +6,8 @@ import type {DrawerScreenParams} from '../types';
 export type DeviceStackParams = {
   DeviceConnect: undefined;
   Scan: undefined;
+  'Devices Connect': undefined;
+  'Bt Status': undefined;
 };
 
 export type DeviceScreenProps = CompositeScreenProps<
@@ -15,5 +17,15 @@ export type DeviceScreenProps = CompositeScreenProps<
 
 export type ScanScreenProps = CompositeScreenProps<
   NativeStackScreenProps<DeviceStackParams, 'Scan'>,
+  DrawerScreenProps<DrawerScreenParams>
+>;
+
+export type DeviceConnectProps = CompositeScreenProps<
+  NativeStackScreenProps<DeviceStackParams, 'Devices Connect'>,
+  DrawerScreenProps<DrawerScreenParams>
+>;
+
+export type StatusScreenProps = CompositeScreenProps<
+  NativeStackScreenProps<DeviceStackParams, 'Bt Status'>,
   DrawerScreenProps<DrawerScreenParams>
 >;
