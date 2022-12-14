@@ -41,6 +41,8 @@ export const appRoutes = createEnum({
   'Edit Details': 'Edit Details',
   'Change Password': 'Change Password',
   'Profile Home': 'Profile Home',
+  'Scanned Devices': 'Scanned Devices',
+  'Bt Status': 'Bt Status',
 });
 
 export const appConfig = {

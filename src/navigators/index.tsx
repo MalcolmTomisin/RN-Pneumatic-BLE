@@ -21,7 +21,10 @@ export default function AppNavigator() {
       {false ? (
         <Stack.Screen name={appRoutes.ONBOARD} component={Onboard} />
       ) : (
-        <Stack.Screen name={appRoutes.DASHBOARD} component={Dashboard} />
+        <>
+          <Stack.Screen name={appRoutes.ONBOARD} component={Onboard} />
+          <Stack.Screen name={appRoutes.DASHBOARD} component={Dashboard} />
+        </>
       )}
     </Stack.Navigator>
   );

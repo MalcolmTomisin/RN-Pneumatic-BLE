@@ -10,6 +10,7 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "dependencies": {
+    "@react-native-community/slider": "^4.3.3",
     "@react-native-picker/picker": "^2.4.8",
     "@react-navigation/drawer": "^6.5.4",
     "@react-navigation/native": "^6.0.16",

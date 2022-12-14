@@ -70,6 +70,7 @@ export const appColors = {
   cancel_red: '#BB0000',
   profile_input_border: '#9ABACD',
   profile_input: '#F0F9FF',
+  process_green: '#12AF77',
 };
 
 export const appFonts = {
