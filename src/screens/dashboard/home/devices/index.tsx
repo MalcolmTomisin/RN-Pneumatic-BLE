@@ -22,9 +22,12 @@ import {RadioButton} from 'react-native-paper';
 import {DeviceConnectProps} from 'src/navigators/dashboard/connect/types';
 import BleManager from 'react-native-ble-manager';
 import {check, PERMISSIONS, RESULTS} from 'react-native-permissions';
+import {hexToUUID} from 'src/utils';
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
+
+const uuid = '0000fff0-0000-1000-8000-00805f9b34fb';
 
 export default function ListDevices({navigation}: DeviceConnectProps) {
   const [value, setValue] = React.useState('');
@@ -33,8 +36,9 @@ export default function ListDevices({navigation}: DeviceConnectProps) {
   const peripherals = new Map();
 
   const startScan = () => {
-    BleManager.scan([], 10, true)
+    BleManager.scan([uuid], 10, true)
       .then(() => {
+        //
         console.log('Scan is starting');
         setIsScanning(true);
       })
@@ -120,41 +124,42 @@ export default function ListDevices({navigation}: DeviceConnectProps) {
   }, []);
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      //contentContainerStyle={{marginBottom: normalize(80)}}
+      style={[styles.container, {paddingBottom: normalize(80)}]}>
       <Text style={styles.bold}>Scanned Devices</Text>
       <Text style={styles.pale}>
         Pair with your device below. Make sure your device is powered on.
       </Text>
-      <ScrollView contentContainerStyle={{}}>
-        <RadioButton.Group
-          onValueChange={value => {
-            setValue(value);
-            //navigation.navigate(appRoutes['Bt Status']);
-          }}
-          value={value}>
-          {list.map((v, i) => (
-            <RadioButton.Item
-              key={`${i}`}
-              label={`Scanned Device ${i + 1} ${v}`}
-              value="first"
-              position="leading"
-              style={{
-                backgroundColor: appColors.white,
-                marginVertical: normalize(4),
-                borderRadius: normalize(8),
-              }}
-              labelStyle={{
-                fontFamily: appFonts.BARLOW_RG,
-                fontSize: normalize(16),
-                lineHeight: normalize(16 * 1.7),
-                color: appColors.shade3,
-              }}
-              color={appColors.blueprimary}
-              uncheckedColor={appColors.border_grey}
-            />
-          ))}
-        </RadioButton.Group>
-      </ScrollView>
+
+      <RadioButton.Group
+        onValueChange={value => {
+          setValue(value);
+          //navigation.navigate(appRoutes['Bt Status']);
+        }}
+        value={value}>
+        {list.map((v, i) => (
+          <RadioButton.Item
+            key={`${i}`}
+            label={`Scanned Device ${i + 1} ${v}`}
+            value="first"
+            position="leading"
+            style={{
+              backgroundColor: appColors.white,
+              marginVertical: normalize(4),
+              borderRadius: normalize(8),
+            }}
+            labelStyle={{
+              fontFamily: appFonts.BARLOW_RG,
+              fontSize: normalize(16),
+              lineHeight: normalize(16 * 1.7),
+              color: appColors.shade3,
+            }}
+            color={appColors.blueprimary}
+            uncheckedColor={appColors.border_grey}
+          />
+        ))}
+      </RadioButton.Group>
       <View style={{paddingTop: normalizeHeight(100)}}>
         <Button
           style={[
@@ -181,6 +186,6 @@ export default function ListDevices({navigation}: DeviceConnectProps) {
           Connect
         </Button>
       </View>
-    </View>
+    </ScrollView>
   );
 }

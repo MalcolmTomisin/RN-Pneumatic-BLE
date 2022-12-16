@@ -34,6 +34,28 @@ export default function Home({navigation}: DeviceScreenProps) {
     BleManager.start({showAlert: false}).then(() => {
       console.log('Module initialized');
     });
+    BleManager.enableBluetooth()
+      .then(() => {
+        console.log('Bluetooth enabled');
+      })
+      .catch(() => {
+        Alert.alert(
+          'Enable bluetooth',
+          'Bluetooth is required to be enabled to initiate connection to composite hardware',
+          [
+            {
+              text: 'Cancel',
+              onPress: () => {},
+            },
+            {
+              text: 'Enable',
+              onPress: async () => {
+                await BleManager.enableBluetooth();
+              },
+            },
+          ],
+        );
+      });
   }, []);
 
   const requestPermissions = async () => {
