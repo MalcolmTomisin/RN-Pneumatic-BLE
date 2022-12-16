@@ -29,6 +29,7 @@ import {
 export default function Home({navigation}: DeviceScreenProps) {
   const [disabled] = React.useState(true);
   const darkMode = useColorScheme() === 'dark';
+  const isLessThanVersion12 = Platform.Version >= 23 && Platform.Version <= 30;
 
   React.useEffect(() => {
     BleManager.start({showAlert: false}).then(() => {
@@ -59,41 +60,55 @@ export default function Home({navigation}: DeviceScreenProps) {
   }, []);
 
   const requestPermissions = async () => {
-    const requestAccess = await requestMultiple([
-      PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
-    ]);
-    if (
-      requestAccess[PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION] ===
-      RESULTS.GRANTED
-    ) {
-      navigation.navigate(appRoutes['Scanned Devices']);
+    // to do: adapt for ios
+    const requestAccess = await requestMultiple(
+      isLessThanVersion12
+        ? [PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION]
+        : [
+            PERMISSIONS.ANDROID.BLUETOOTH_ADVERTISE,
+            PERMISSIONS.ANDROID.BLUETOOTH_CONNECT,
+            PERMISSIONS.ANDROID.BLUETOOTH_SCAN,
+          ],
+    );
+    if (isLessThanVersion12) {
+      return (
+        requestAccess[PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION] ===
+        RESULTS.GRANTED
+      );
+    } else {
+      return (
+        requestAccess[PERMISSIONS.ANDROID.BLUETOOTH_ADVERTISE] ===
+          RESULTS.GRANTED &&
+        requestAccess[PERMISSIONS.ANDROID.BLUETOOTH_CONNECT] ===
+          RESULTS.GRANTED &&
+        requestAccess[PERMISSIONS.ANDROID.BLUETOOTH_SCAN] === RESULTS.GRANTED
+      );
     }
   };
 
   const checkPermissions = async () => {
     if (Platform.OS === 'android') {
-      const permission = await checkMultiple([
-        PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
-      ]);
-
-      console.log(
-        'android  ===>',
-        RESULTS.GRANTED,
-        permission[PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION],
+      const permission = await checkMultiple(
+        isLessThanVersion12
+          ? [PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION]
+          : [
+              PERMISSIONS.ANDROID.BLUETOOTH_ADVERTISE,
+              PERMISSIONS.ANDROID.BLUETOOTH_CONNECT,
+              PERMISSIONS.ANDROID.BLUETOOTH_SCAN,
+            ],
       );
       if (
         permission[PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION] !== RESULTS.GRANTED
       ) {
-        const requestAccess = await requestMultiple([
-          PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
-        ]);
-        if (
-          requestAccess[PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION] !==
-          RESULTS.GRANTED
-        ) {
+        const requestAccess = await requestPermissions();
+        if (!requestAccess) {
           Alert.alert(
-            'Bluetooth and Location Permissions',
-            'Bluetooth and location permissions help the app locate the composite hardware. Please grant these permissions to proceed',
+            `Bluetooth ${
+              isLessThanVersion12 ? 'and Location' : ''
+            } Permissions`,
+            `Bluetooth ${
+              isLessThanVersion12 ? 'and Location' : ''
+            } permissions help the app locate the composite hardware. Please grant these permissions to proceed`,
             [
               {
                 text: 'Cancel',

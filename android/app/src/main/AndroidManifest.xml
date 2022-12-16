@@ -8,6 +8,7 @@
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" android:maxSdkVersion="28"/>
     <uses-permission-sdk-23 android:name="android.permission.ACCESS_FINE_LOCATION" tools:targetApi="Q"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30" />
 
     <!-- Only when targeting Android 12 or higher -->
     <!-- Please make sure you read the following documentation to have a
@@ -20,7 +21,7 @@
          doesn't derive physical location. -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" 
                      android:usesPermissionFlags="neverForLocation"
-                     tools:targetApi="s" />
+                    />
 
     <!-- Needed only if your app looks for Bluetooth devices. -->
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
