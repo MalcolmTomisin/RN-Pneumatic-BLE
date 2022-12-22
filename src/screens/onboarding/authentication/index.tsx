@@ -8,13 +8,12 @@ import type {AuthScreenProps} from 'src/navigators/onboarding/types';
 export default function AuthScreen({navigation}: AuthScreenProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.bold}>2FA Authenthication</Text>
+      <Text style={styles.bold}>Two Factor Authentication</Text>
       <Text style={styles.pale}>
-        An OTP has been sent to your mail custompenumatic@supermail.com, enter
-        code here
+        A code has been sent to your email. Enter the code below
       </Text>
       <TextInput
-        label="OTP Number"
+        label="Code"
         placeholder="Enter code here"
         placeholderTextColor={appColors.placeholder_grey}
       />
@@ -33,6 +32,7 @@ export default function AuthScreen({navigation}: AuthScreenProps) {
 
       <Button
         onPress={() => {
+          navigation.pop();
           navigation.navigate(appRoutes.DASHBOARD);
         }}>
         Validate
