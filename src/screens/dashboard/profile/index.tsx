@@ -47,12 +47,12 @@ const Information = ({navigation}) => (
             <Text style={[styles.bold_color, styles.bold_info]}>Patient</Text>
           </View>
         </View>
-        <View style={[{flex: 1, justifyContent: 'flex-start'}]}>
+        {/* <View style={[{flex: 1, justifyContent: 'flex-start'}]}>
           <Text style={[styles.pale_info]}>Status</Text>
           <View style={{width: normalize(50)}}>
             <Switch />
           </View>
-        </View>
+        </View> */}
       </View>
       <View style={[styles.row, styles.space_24]}>
         <View style={[{flex: 1}]}>
@@ -97,7 +97,7 @@ const Information = ({navigation}) => (
           alignItems: 'center',
         },
       ]}>
-      <TouchableOpacity
+      {/* <TouchableOpacity
         onPress={() => {
           navigation.navigate(appRoutes['Edit Details']);
         }}
@@ -108,7 +108,7 @@ const Information = ({navigation}) => (
           resizeMode="contain"
           style={{width: normalize(16), height: normalize(16)}}
         />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
       <TouchableOpacity
         onPress={() => {
           navigation.navigate(appRoutes['Change Password']);
@@ -213,7 +213,7 @@ export default function Profile({navigation}: ProfileScreenProps) {
   const [index, setIndex] = useState(0);
   const [routes] = React.useState([
     {key: 'first', title: 'Information'},
-    {key: 'second', title: 'Activity Log'},
+    // {key: 'second', title: 'Activity Log'},
   ]);
   return (
     <View style={styles.container}>
