@@ -7,7 +7,7 @@ export type DeviceStackParams = {
   DeviceConnect: undefined;
   Scan: undefined;
   'Devices Connect': undefined;
-  'Bt Status': undefined;
+  'Bt Status': {peripheralId: string};
 };
 
 export type DeviceScreenProps = CompositeScreenProps<
