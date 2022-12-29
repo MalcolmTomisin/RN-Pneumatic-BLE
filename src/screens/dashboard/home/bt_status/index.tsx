@@ -1,10 +1,52 @@
 import React from 'react';
-import {Image, View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import {
+  Image,
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  NativeModules,
+  NativeEventEmitter,
+  ToastAndroid,
+} from 'react-native';
 import Slider from '@react-native-community/slider';
 import ic_chev from 'assets/images/ic_chevron.png';
 import {appColors, appFonts, normalize, normalizeHeight} from 'src/config';
+import {StatusScreenProps} from 'src/navigators/dashboard/connect/types';
+import BleManager from 'react-native-ble-manager';
+import {bytesToString} from 'convert-string';
 
-export default function Bt_status() {
+const BleManagerModule = NativeModules.BleManager;
+const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
+const uuid = '0000FFF0-0000-1000-8000-00805F9B34FB';
+const characteristic_uuid = '0000FFF6-0000-1000-8000-00805F9B34FB';
+
+export default function Bt_status({route}: StatusScreenProps) {
+  const {peripheralId} = route.params;
+
+  React.useEffect(() => {
+    (async () => {
+      await BleManager.retrieveServices(peripheralId);
+      await BleManager.startNotification(
+        peripheralId,
+        uuid,
+        characteristic_uuid,
+      );
+      bleManagerEmitter.addListener(
+        'BleManagerDidUpdateValueForCharacteristic',
+        ({value, peripheral, characteristic, service}) => {
+          // Convert bytes array to string
+          const data = bytesToString(value);
+          ToastAndroid.showWithGravity(
+            `Received ${data} for characteristic ${characteristic}`,
+            ToastAndroid.SHORT,
+            ToastAndroid.BOTTOM,
+          );
+          //console.log(`Received ${data} for characteristic ${characteristic}`);
+        },
+      );
+    })();
+  }, [peripheralId]);
   return (
     <View
       style={{

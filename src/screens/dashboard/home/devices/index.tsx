@@ -8,6 +8,8 @@ import {
   Platform,
   EmitterSubscription,
   ScrollView,
+  ToastAndroid,
+  TouchableOpacity,
 } from 'react-native';
 import {Button} from 'src/components';
 import {
@@ -18,7 +20,8 @@ import {
   appRoutes,
 } from 'src/config';
 import styles from 'src/screens/styles';
-import {RadioButton} from 'react-native-paper';
+import {bytesToString} from 'convert-string';
+// import {Button} from 'react-native-paper';
 import {DeviceConnectProps} from 'src/navigators/dashboard/connect/types';
 import BleManager from 'react-native-ble-manager';
 import {check, PERMISSIONS, RESULTS} from 'react-native-permissions';
@@ -28,6 +31,35 @@ const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
 const uuid = '0000FFF0-0000-1000-8000-00805F9B34FB';
+const characteristic_uuid = '0000FFF6-0000-1000-8000-00805F9B34FB';
+
+async function connectAndPrepare(
+  peripheral: string,
+  service: string,
+  characteristic: string,
+) {
+  // Connect to device
+  await BleManager.connect(peripheral);
+  // Before startNotification you need to call retrieveServices
+  await BleManager.retrieveServices(peripheral);
+  // To enable BleManagerDidUpdateValueForCharacteristic listener
+  await BleManager.startNotification(peripheral, service, characteristic);
+  // Add event listener
+  bleManagerEmitter.addListener(
+    'BleManagerDidUpdateValueForCharacteristic',
+    ({value, peripheral, characteristic, service}) => {
+      // Convert bytes array to string
+      const data = bytesToString(value);
+      ToastAndroid.showWithGravity(
+        `Received ${data} for characteristic ${characteristic}`,
+        ToastAndroid.SHORT,
+        ToastAndroid.BOTTOM,
+      );
+      console.log(`Received ${data} for characteristic ${characteristic}`);
+    },
+  );
+  // Actions triggereng BleManagerDidUpdateValueForCharacteristic event
+}
 
 export default function ListDevices({navigation}: DeviceConnectProps) {
   const [value, setValue] = React.useState('');
@@ -132,34 +164,44 @@ export default function ListDevices({navigation}: DeviceConnectProps) {
         Pair with your device below. Make sure your device is powered on.
       </Text>
 
-      <RadioButton.Group
-        onValueChange={value => {
-          setValue(value);
-          //navigation.navigate(appRoutes['Bt Status']);
-        }}
-        value={value}>
-        {list.map((v, i) => (
-          <RadioButton.Item
-            key={`${i}`}
-            label={`Scanned Device ${i + 1} ${v}`}
-            value="first"
-            position="leading"
+      {list.map((v, i) => (
+        <TouchableOpacity
+          key={`${i}`}
+          style={{
+            backgroundColor: appColors.white,
+            marginVertical: normalize(4),
+            borderRadius: normalize(8),
+            padding: 10,
+          }}
+          onPress={() => {
+            BleManager.connect(v.id)
+              .then(() => {
+                ToastAndroid.showWithGravity(
+                  'connected',
+                  ToastAndroid.SHORT,
+                  ToastAndroid.BOTTOM,
+                );
+                navigation.navigate(appRoutes['Bt Status'], {
+                  peripheralId: v.id,
+                });
+              })
+              .catch(() => {
+                ToastAndroid.showWithGravity(
+                  'error in connection',
+                  ToastAndroid.SHORT,
+                  ToastAndroid.BOTTOM,
+                );
+              });
+          }}>
+          <Text
             style={{
-              backgroundColor: appColors.white,
-              marginVertical: normalize(4),
-              borderRadius: normalize(8),
-            }}
-            labelStyle={{
               fontFamily: appFonts.BARLOW_RG,
               fontSize: normalize(16),
               lineHeight: normalize(16 * 1.7),
               color: appColors.shade3,
-            }}
-            color={appColors.blueprimary}
-            uncheckedColor={appColors.border_grey}
-          />
-        ))}
-      </RadioButton.Group>
+            }}>{`${v.name ? v.name : 'NO NAME'}`}</Text>
+        </TouchableOpacity>
+      ))}
       <View style={{paddingTop: normalizeHeight(100)}}>
         <Button
           style={[

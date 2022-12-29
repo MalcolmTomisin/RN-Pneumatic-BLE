@@ -42,7 +42,7 @@ export default function Login({navigation}: LoginScreenProps) {
       />
       <Text style={styles.lowerText}>
         By signing in, I accept the{' '}
-        <Text style={styles.terms}>Terms & Conditions</Text> and privacy policy
+        <Text style={styles.terms}>Terms & Conditions and Privacy Policy</Text>
         of Smart Brace Technology by Spinal Technology
       </Text>
       <Button
