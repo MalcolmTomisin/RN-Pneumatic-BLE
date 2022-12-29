@@ -8,6 +8,7 @@ import {
   NativeModules,
   NativeEventEmitter,
   ToastAndroid,
+  EmitterSubscription,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import ic_chev from 'assets/images/ic_chevron.png';
@@ -15,6 +16,9 @@ import {appColors, appFonts, normalize, normalizeHeight} from 'src/config';
 import {StatusScreenProps} from 'src/navigators/dashboard/connect/types';
 import BleManager from 'react-native-ble-manager';
 import {bytesToString} from 'convert-string';
+import database from '@react-native-firebase/database';
+import {Buffer} from '@craftzdog/react-native-buffer';
+import {parseDataPacket} from 'src/utils';
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
@@ -25,27 +29,81 @@ export default function Bt_status({route}: StatusScreenProps) {
   const {peripheralId} = route.params;
 
   React.useEffect(() => {
+    let bleListener: EmitterSubscription;
     (async () => {
-      await BleManager.retrieveServices(peripheralId);
+      const peripheral = await BleManager.retrieveServices(peripheralId);
+      database().ref('/peripherals').push(peripheral);
       await BleManager.startNotification(
         peripheralId,
         uuid,
         characteristic_uuid,
       );
-      bleManagerEmitter.addListener(
+      bleListener = bleManagerEmitter.addListener(
         'BleManagerDidUpdateValueForCharacteristic',
         ({value, peripheral, characteristic, service}) => {
           // Convert bytes array to string
-          const data = bytesToString(value);
-          ToastAndroid.showWithGravity(
-            `Received ${data} for characteristic ${characteristic}`,
-            ToastAndroid.SHORT,
-            ToastAndroid.BOTTOM,
-          );
+          try {
+            const data = bytesToString(value);
+            const buffer = Buffer.from(value);
+            const parsedData = parseDataPacket(buffer);
+
+            database()
+              .ref('/debug' + Date.now())
+              .set({
+                bytes: data,
+                parsedData,
+                peripheral,
+                characteristic,
+                service,
+              });
+            ToastAndroid.showWithGravity(
+              `Received ${data} for characteristic ${characteristic}`,
+              ToastAndroid.SHORT,
+              ToastAndroid.BOTTOM,
+            );
+          } catch (e) {
+            console.log(e);
+            database()
+              .ref('/error' + Date.now())
+              .set({e});
+          }
           //console.log(`Received ${data} for characteristic ${characteristic}`);
         },
       );
     })();
+    BleManager.retrieveServices(peripheralId).then(val => {
+      database().ref('/peripherals').push(val);
+      BleManager.read(peripheralId, uuid, characteristic_uuid)
+        .then(value => {
+          const buffer = Buffer.from(value);
+          const sensorData = buffer.readUInt8(1, true);
+          const parsedData = parseDataPacket(buffer);
+          const data = bytesToString(value);
+          database()
+            .ref('/read' + Date.now())
+            .set({
+              bytes: data,
+              parsedData,
+              peripheralId,
+              characteristic_uuid,
+              service: uuid,
+              sensorData,
+            });
+          ToastAndroid.showWithGravity(
+            `Read data for characteristic ${data}`,
+            ToastAndroid.SHORT,
+            ToastAndroid.BOTTOM,
+          );
+        })
+        .catch(e => {
+          database()
+            .ref('/error' + Date.now())
+            .set({e});
+        });
+    });
+    // return () => {
+    //   bleListener ? bleManagerEmitter.removeSubscription(bleListener) : null;
+    // };
   }, [peripheralId]);
   return (
     <View
