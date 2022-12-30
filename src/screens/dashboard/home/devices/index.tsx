@@ -68,7 +68,7 @@ export default function ListDevices({navigation}: DeviceConnectProps) {
   const peripherals = new Map();
 
   const startScan = () => {
-    BleManager.scan([uuid], 30, true)
+    BleManager.scan([], 30, true)
       .then(() => {
         //
         console.log('Scan is starting');

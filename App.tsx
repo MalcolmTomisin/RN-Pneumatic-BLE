@@ -29,6 +29,7 @@ import {
 import {MMKV} from 'react-native-mmkv';
 import {storage, PERSISTENCE_KEY} from 'src/utils';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import codePush from 'react-native-code-push';
 
 const App = () => {
   const isDarkMode = useColorScheme() === 'dark';
@@ -83,4 +84,7 @@ const App = () => {
   );
 };
 
-export default App;
+export default codePush({
+  checkFrequency: codePush.CheckFrequency.ON_APP_RESUME,
+  installMode: codePush.InstallMode.IMMEDIATE,
+})(App);
