@@ -15,10 +15,15 @@ import ic_chev from 'assets/images/ic_chevron.png';
 import {appColors, appFonts, normalize, normalizeHeight} from 'src/config';
 import {StatusScreenProps} from 'src/navigators/dashboard/connect/types';
 import BleManager from 'react-native-ble-manager';
-import {bytesToString} from 'convert-string';
+import {bytesToString, stringToBytes} from 'convert-string';
 import database from '@react-native-firebase/database';
 import {Buffer} from '@craftzdog/react-native-buffer';
-import {parseDataPacket} from 'src/utils';
+import {
+  parseDataPacket,
+  buildStartCommandPacket,
+  parseResponsePacket,
+} from 'src/utils';
+import {btoa} from 'react-native-quick-base64';
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
@@ -43,22 +48,24 @@ export default function Bt_status({route}: StatusScreenProps) {
         ({value, peripheral, characteristic, service}) => {
           // Convert bytes array to string
           try {
-            const data = bytesToString(value);
+            //const data = bytesToString(value);
             const buffer = Buffer.from(value);
             const parsedData = parseDataPacket(buffer);
 
             database()
               .ref('/debug' + Date.now())
               .set({
-                bytes: data,
                 parsedData,
                 peripheral,
                 characteristic,
                 service,
+                value,
+                buffer: buffer.toJSON(),
+                bytes: buffer.toString('utf8'),
               });
             ToastAndroid.showWithGravity(
-              `Received ${data} for characteristic ${characteristic}`,
-              ToastAndroid.SHORT,
+              `Received ${value} for characteristic ${characteristic}`,
+              ToastAndroid.LONG,
               ToastAndroid.BOTTOM,
             );
           } catch (e) {
@@ -71,40 +78,91 @@ export default function Bt_status({route}: StatusScreenProps) {
         },
       );
     })();
-    BleManager.retrieveServices(peripheralId).then(val => {
-      database().ref('/peripherals').push(val);
-      BleManager.read(peripheralId, uuid, characteristic_uuid)
-        .then(value => {
-          const buffer = Buffer.from(value);
-          const sensorData = buffer.readUInt8(1, true);
-          const parsedData = parseDataPacket(buffer);
-          const data = bytesToString(value);
-          database()
-            .ref('/read' + Date.now())
-            .set({
-              bytes: data,
-              parsedData,
-              peripheralId,
-              characteristic_uuid,
-              service: uuid,
-              sensorData,
-            });
-          ToastAndroid.showWithGravity(
-            `Read data for characteristic ${data}`,
-            ToastAndroid.SHORT,
-            ToastAndroid.BOTTOM,
-          );
-        })
-        .catch(e => {
-          database()
-            .ref('/error' + Date.now())
-            .set({e});
-        });
-    });
+    // BleManager.retrieveServices(peripheralId).then(val => {
+    //   database().ref('/peripherals').push(val);
+    //   BleManager.read(peripheralId, uuid, characteristic_uuid)
+    //     .then(value => {
+    //       const buffer = Buffer.from(value);
+    //       const sensorData = buffer.readUInt8(1, true);
+    //       const parsedData = parseDataPacket(buffer);
+    //       const data = bytesToString(value);
+    //       database()
+    //         .ref('/read' + Date.now())
+    //         .set({
+    //           bytes: data,
+    //           parsedData,
+    //           peripheralId,
+    //           characteristic_uuid,
+    //           service: uuid,
+    //           sensorData,
+    //         });
+    //       ToastAndroid.showWithGravity(
+    //         `Read data for characteristic ${data}`,
+    //         ToastAndroid.SHORT,
+    //         ToastAndroid.BOTTOM,
+    //       );
+    //     })
+    //     .catch(e => {
+    //       database()
+    //         .ref('/error' + Date.now())
+    //         .set({e});
+    //     });
+    // });
     // return () => {
     //   bleListener ? bleManagerEmitter.removeSubscription(bleListener) : null;
     // };
   }, [peripheralId]);
+
+  const inflateHardware = (value: number) => {
+    try {
+      const startData = buildStartCommandPacket(value, 10, 6, 0, 4, 4);
+      // const base64 = btoa(
+      //   String.fromCharCode.apply(null, new Uint8Array(startData)),
+      // );
+      const base64 = Array.from(startData);
+      // const bytes = stringToBytes('8010')
+
+      BleManager.retrieveServices(peripheralId).then(val => {
+        BleManager.write(peripheralId, uuid, characteristic_uuid, base64)
+          .then(() => {
+            database().ref('/write').push({
+              write: 'successful',
+            });
+          })
+          .catch(e => {
+            database().ref('/write').push({e});
+          });
+      });
+    } catch (e) {
+      database()
+        .ref('/write')
+        .push({e, info: 'conversion to array byte not working'});
+    }
+  };
+
+  const startHardware = (peripheralId: string) => {
+    try {
+      const startData = buildStartCommandPacket(80, 10, 6, 0, 4, 4);
+      const base64 = Array.from(startData);
+      // const bytes = stringToBytes('8010')
+
+      BleManager.retrieveServices(peripheralId).then(val => {
+        BleManager.write(peripheralId, uuid, characteristic_uuid, base64)
+          .then(() => {
+            database().ref('/write').push({
+              write: 'successful',
+            });
+          })
+          .catch(e => {
+            database().ref('/write').push({e});
+          });
+      });
+    } catch (e) {
+      database()
+        .ref('/write')
+        .push({e, info: 'conversion to array byte not working'});
+    }
+  };
   return (
     <View
       style={{
@@ -195,8 +253,11 @@ export default function Bt_status({route}: StatusScreenProps) {
             height: normalize(8),
             backgroundColor: '#EEEEEE',
           }}
-          minimumValue={0}
-          maximumValue={100}
+          minimumValue={30}
+          maximumValue={250}
+          onSlidingComplete={val => {
+            inflateHardware(val);
+          }}
         />
         <View
           style={{
@@ -227,6 +288,7 @@ export default function Bt_status({route}: StatusScreenProps) {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
+            onPress={() => startHardware(peripheralId)}
             style={{
               justifyContent: 'center',
               alignItems: 'center',
@@ -243,7 +305,7 @@ export default function Bt_status({route}: StatusScreenProps) {
                 lineHeight: normalize(14 * 1.5),
                 color: appColors.process_green,
               }}>
-              Increase
+              Start
             </Text>
           </TouchableOpacity>
         </View>
