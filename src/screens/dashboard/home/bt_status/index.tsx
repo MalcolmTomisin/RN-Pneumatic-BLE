@@ -9,6 +9,8 @@ import {
   NativeEventEmitter,
   ToastAndroid,
   EmitterSubscription,
+  TextInput,
+  InteractionManager,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import ic_chev from 'assets/images/ic_chevron.png';
@@ -29,9 +31,16 @@ const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 const uuid = '0000FFF0-0000-1000-8000-00805F9B34FB';
 const characteristic_uuid = '0000FFF6-0000-1000-8000-00805F9B34FB';
+const cmdIdentifier = [0x55, 0xaa];
+const holdTime = [0xb4, 0x00];
 
 export default function Bt_status({route}: StatusScreenProps) {
   const {peripheralId} = route.params;
+  const batteryStatusDisplayed = React.useRef(false);
+  const [userInput, setInput] = React.useState('');
+  const [batterStatus, setBatterStatus] = React.useState(0);
+  const [sliderPressure, setSliderPressure] = React.useState(0);
+  const [hardwarePressure, setHardwarePressure] = React.useState(0);
 
   React.useEffect(() => {
     let bleListener: EmitterSubscription;
@@ -63,11 +72,21 @@ export default function Bt_status({route}: StatusScreenProps) {
                 buffer: buffer.toJSON(),
                 bytes: buffer.toString('utf8'),
               });
-            ToastAndroid.showWithGravity(
-              `Received ${value} for characteristic ${characteristic}`,
-              ToastAndroid.LONG,
-              ToastAndroid.BOTTOM,
-            );
+
+            if (!(parsedData.cmdCode === 3 && batteryStatusDisplayed.current)) {
+              ToastAndroid.showWithGravity(
+                `Received ${value} for characteristic ${characteristic}`,
+                ToastAndroid.SHORT,
+                ToastAndroid.BOTTOM,
+              );
+            }
+
+            if (parsedData.cmdCode === 3) {
+              setBatterStatus(parsedData.para);
+              batteryStatusDisplayed.current = true;
+            } else if (parsedData.cmdCode === 36) {
+              setHardwarePressure(parsedData.para);
+            }
           } catch (e) {
             console.log(e);
             database()
@@ -78,6 +97,7 @@ export default function Bt_status({route}: StatusScreenProps) {
         },
       );
     })();
+
     // BleManager.retrieveServices(peripheralId).then(val => {
     //   database().ref('/peripherals').push(val);
     //   BleManager.read(peripheralId, uuid, characteristic_uuid)
@@ -108,31 +128,88 @@ export default function Bt_status({route}: StatusScreenProps) {
     //         .set({e});
     //     });
     // });
-    // return () => {
-    //   bleListener ? bleManagerEmitter.removeSubscription(bleListener) : null;
-    // };
+
+    return () => {
+      bleListener ? bleManagerEmitter.removeSubscription(bleListener) : null;
+    };
   }, [peripheralId]);
 
+  const processUserInput = (text: string) => {
+    setInput(text);
+  };
+
+  const submitHandler = () => {
+    const userInputArray = userInput.split(',');
+    const cmdArray = userInputArray.map(value => {
+      return parseInt(value, 16);
+    });
+
+    write(cmdIdentifier.concat(cmdArray));
+  };
+
+  /**
+   *
+   * @param value
+   */
+  const sliderHandler = (value: number) => {
+    const hexValue = parseInt(value.toString(16), 16);
+
+    setSliderPressure(value);
+
+    InteractionManager.runAfterInteractions(() => {
+      inflateHardware(hexValue);
+      // getPressureStatus();
+    });
+  };
+
+  const decreasePressure = () => {
+    setSliderPressure(s => {
+      return s - 10 >= 40 ? s - 10 : s;
+    });
+
+    const hexValue = parseInt(sliderPressure.toString(16), 16);
+
+    // InteractionManager.runAfterInteractions(() => {
+    inflateHardware(hexValue);
+    // getPressureStatus();
+    // });
+  };
+
+  const increasePressure = () => {
+    setSliderPressure(s => {
+      return s + 10 <= 130 ? s + 10 : s;
+    });
+
+    const hexValue = parseInt(sliderPressure.toString(16), 16);
+
+    // InteractionManager.runAfterInteractions(() => {
+    inflateHardware(hexValue);
+    // getPressureStatus();
+    // });
+  };
+
+  /**
+   * TODO:
+   * Refactor to call the write function
+   * @param peripheralId
+   */
   const inflateHardware = (value: number) => {
     try {
-      const startData = buildStartCommandPacket(value, 10, 6, 0, 4, 4);
-      // const base64 = btoa(
-      //   String.fromCharCode.apply(null, new Uint8Array(startData)),
-      // );
-      const base64 = Array.from(startData);
+      // const startData = buildStartCommandPacket(80, 10, 6, 0, 4, 4);
+      // const base64 = Array.from(startData);
       // const bytes = stringToBytes('8010')
+      // const statusCmd = [0x55, 0xaa, 0x01, 0x21, 0x7c];
+      // const inflateCmd = [
+      //   0x55, 0xaa, 0x0a, 0x22, 0x82, 0x00, 0xb4, 0x00, 0x05, 0x00, 0x00, 0x01,
+      //   0x02,
+      // ];
+      const inflateCmd = cmdIdentifier.concat(
+        [0x0a, 0x22, value, 0x00].concat(
+          holdTime.concat([0x05, 0x00, 0x00, 0x01, 0x02]),
+        ),
+      );
 
-      BleManager.retrieveServices(peripheralId).then(val => {
-        BleManager.write(peripheralId, uuid, characteristic_uuid, base64)
-          .then(() => {
-            database().ref('/write').push({
-              write: 'successful',
-            });
-          })
-          .catch(e => {
-            database().ref('/write').push({e});
-          });
-      });
+      write(inflateCmd);
     } catch (e) {
       database()
         .ref('/write')
@@ -140,14 +217,28 @@ export default function Bt_status({route}: StatusScreenProps) {
     }
   };
 
-  const startHardware = (peripheralId: string) => {
+  const getPressureStatus = () => {
     try {
-      const startData = buildStartCommandPacket(80, 10, 6, 0, 4, 4);
-      const base64 = Array.from(startData);
-      // const bytes = stringToBytes('8010')
+      const cmd = cmdIdentifier.concat([0x01, 0x24]);
+
+      write(cmd);
+    } catch (e) {
+      database()
+        .ref('/write')
+        .push({e, info: 'conversion to array byte not working'});
+    }
+  };
+
+  /**
+   *
+   * @param cmd
+   */
+  const write = (cmd: Array<number>) => {
+    try {
+      console.log(`Writing command: ${cmd}`);
 
       BleManager.retrieveServices(peripheralId).then(val => {
-        BleManager.write(peripheralId, uuid, characteristic_uuid, base64)
+        BleManager.write(peripheralId, uuid, characteristic_uuid, cmd)
           .then(() => {
             database().ref('/write').push({
               write: 'successful',
@@ -163,6 +254,7 @@ export default function Bt_status({route}: StatusScreenProps) {
         .push({e, info: 'conversion to array byte not working'});
     }
   };
+
   return (
     <View
       style={{
@@ -187,6 +279,18 @@ export default function Bt_status({route}: StatusScreenProps) {
       <Text style={styles.pale}>
         Select the preferred pressure of the device.
       </Text>
+      <TextInput
+        value={userInput}
+        onChangeText={processUserInput}
+        onSubmitEditing={submitHandler}
+        style={{
+          borderWidth: 1,
+          borderColor: 'black',
+          height: 48,
+          width: '100%',
+          color: 'black',
+        }}
+      />
       <View
         style={{
           borderRadius: normalize(16),
@@ -222,7 +326,9 @@ export default function Bt_status({route}: StatusScreenProps) {
               },
               styles.text_container,
             ]}>
-            <Text style={[styles.title, {color: appColors.white}]}>Full</Text>
+            <Text style={[styles.title, {color: appColors.white}]}>
+              {batterStatus}%
+            </Text>
           </View>
           <View
             style={[
@@ -233,7 +339,9 @@ export default function Bt_status({route}: StatusScreenProps) {
               },
               styles.text_container,
             ]}>
-            <Text style={[styles.title, {color: appColors.white}]}>70</Text>
+            <Text style={[styles.title, {color: appColors.white}]}>
+              {hardwarePressure}
+            </Text>
           </View>
         </View>
         <Text
@@ -247,16 +355,30 @@ export default function Bt_status({route}: StatusScreenProps) {
           ]}>
           Move slider or tap buttons to adjust pressure
         </Text>
+        <Text
+          style={[
+            styles.pale,
+            {
+              marginTop: normalize(32),
+              marginBottom: normalize(28),
+              textAlign: 'left',
+              color: 'black',
+            },
+          ]}>
+          {sliderPressure}
+        </Text>
         <Slider
           style={{
             width: '100%',
             height: normalize(8),
             backgroundColor: '#EEEEEE',
           }}
-          minimumValue={30}
-          maximumValue={250}
+          value={0}
+          step={10}
+          minimumValue={40}
+          maximumValue={130}
           onSlidingComplete={val => {
-            inflateHardware(val);
+            sliderHandler(val);
           }}
         />
         <View
@@ -268,6 +390,7 @@ export default function Bt_status({route}: StatusScreenProps) {
             marginBottom: normalize(24),
           }}>
           <TouchableOpacity
+            onPress={() => decreasePressure()}
             style={{
               justifyContent: 'center',
               alignItems: 'center',
@@ -288,7 +411,7 @@ export default function Bt_status({route}: StatusScreenProps) {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => startHardware(peripheralId)}
+            onPress={() => increasePressure()}
             style={{
               justifyContent: 'center',
               alignItems: 'center',
@@ -305,7 +428,7 @@ export default function Bt_status({route}: StatusScreenProps) {
                 lineHeight: normalize(14 * 1.5),
                 color: appColors.process_green,
               }}>
-              Start
+              Increase
             </Text>
           </TouchableOpacity>
         </View>
