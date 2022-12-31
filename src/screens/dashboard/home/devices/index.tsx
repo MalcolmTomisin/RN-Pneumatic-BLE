@@ -68,7 +68,7 @@ export default function ListDevices({navigation}: DeviceConnectProps) {
   const peripherals = new Map();
 
   const startScan = () => {
-    BleManager.scan([], 30, true)
+    BleManager.scan([], 15, true)
       .then(() => {
         //
         console.log('Scan is starting');
@@ -80,7 +80,7 @@ export default function ListDevices({navigation}: DeviceConnectProps) {
   };
 
   const handleDiscoverPeripheral = peripheral => {
-    console.log('Got ble peripheral', peripheral);
+    // console.log('Got ble peripheral', peripheral);
     if (!peripheral.name) {
       peripheral.name = 'NO NAME';
     }

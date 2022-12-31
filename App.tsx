@@ -33,7 +33,7 @@ import codePush from 'react-native-code-push';
 
 const App = () => {
   const isDarkMode = useColorScheme() === 'dark';
-  const [isReady, setIsReady] = React.useState(__DEV__ ? false : true);
+  const [isReady, setIsReady] = React.useState(__DEV__ ? true : false);
   const [initialState, setInitialState] = React.useState();
   const theme = isDarkMode ? CombinedDarkTheme : CombinedDefaultTheme;
 
@@ -84,7 +84,9 @@ const App = () => {
   );
 };
 
-export default codePush({
-  checkFrequency: codePush.CheckFrequency.ON_APP_RESUME,
-  installMode: codePush.InstallMode.IMMEDIATE,
-})(App);
+// export default codePush({
+//   checkFrequency: codePush.CheckFrequency.ON_APP_RESUME,
+//   installMode: codePush.InstallMode.IMMEDIATE,
+// })(App);
+
+export default App;

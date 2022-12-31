@@ -38,18 +38,18 @@ export function parseDataPacket(data: Buffer) {
   const cmdCode = data[3];
 
   // Extract the Para field (variable length)
-  const paraLength = dataOutLength - 3; // subtract 3 bytes for the Identification code, Data out length, and Cmd_code
-  const para = data.slice(4, 4 + paraLength);
+  // const paraLength = dataOutLength - 3; // subtract 3 bytes for the Identification code, Data out length, and Cmd_code
+  const para = data[4];
 
   // Extract the CRC8 field (1 byte)
-  const crc8 = data[data.length - 1];
+  const crc8 = data[5];
 
   // Return the parsed fields as an object
   return {
     identificationCode: identificationCodeValue,
     dataOutLength,
     cmdCode,
-    para: para.toJSON(),
+    para: para,
     crc8,
   };
 }
