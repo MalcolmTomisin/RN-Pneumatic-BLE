@@ -47,7 +47,8 @@ export default function Login({navigation}: LoginScreenProps) {
       </Text>
       <Button
         onPress={() => {
-          navigation.navigate(appRoutes.AUTH);
+          // navigation.navigate(appRoutes.AUTH);
+          navigation.navigate(appRoutes.DASHBOARD);
         }}
         style={styles.btn}>
         Log In
