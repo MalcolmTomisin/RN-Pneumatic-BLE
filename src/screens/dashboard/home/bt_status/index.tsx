@@ -483,7 +483,7 @@ export default function Bt_status({route}: StatusScreenProps) {
               },
               styles.text_container,
             ]}>
-            <Text style={[styles.title, {color: appColors.white}]}>
+            <Text style={[styles.title, {color: appColors.white}]} onPress={() => getPressureStatus()}>
               {hardwarePressure}
             </Text>
           </View>
