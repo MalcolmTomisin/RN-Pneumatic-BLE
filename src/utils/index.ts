@@ -39,9 +39,11 @@ export function parseDataPacket(data: Buffer) {
 
   // Extract the Para field (variable length)
   // const paraLength = dataOutLength - 3; // subtract 3 bytes for the Identification code, Data out length, and Cmd_code
+  // const para = dataOutLength === 1 ? data[4] : data.slice(4, 2);
   const para = data[4];
 
   // Extract the CRC8 field (1 byte)
+  // const crc8 = dataOutLength === 1 ? data[5] : data[6];
   const crc8 = data[5];
 
   // Return the parsed fields as an object
@@ -73,7 +75,7 @@ export function parseResponsePacket(data: Buffer) {
   };
 }
 
-function calculateCRC8(data) {
+export function calculateCRC8(data) {
   // Define the polynomial and initial value
   const polynomial = 0x07; // 8-bit polynomial
   let crc = 0x00; // Initial value

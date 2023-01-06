@@ -104,13 +104,13 @@ export default function ListDevices({navigation}: DeviceConnectProps) {
   };
 
   const handleUpdateValueForCharacteristic = data => {
-    console.log(
-      'Received data from ' +
-        data.peripheral +
-        ' characteristic ' +
-        data.characteristic,
-      data.value,
-    );
+    // console.log(
+    //   'Received data from ' +
+    //     data.peripheral +
+    //     ' characteristic ' +
+    //     data.characteristic,
+    //   data.value,
+    // );
   };
 
   const retrieveConnected = () => {
