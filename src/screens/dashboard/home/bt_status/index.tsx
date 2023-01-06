@@ -12,6 +12,8 @@ import {
   EmitterSubscription,
   TextInput,
   InteractionManager,
+  AppStateStatus,
+  AppState,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import ic_chev from 'assets/images/ic_chevron.png';
@@ -42,6 +44,8 @@ const MASTER_QUERY_STATUS_CMD = 33;
 const START_CMD = 34;
 const STOP_CMD = 35;
 const MASTER_QUERY_PRESSURE_CMD = 36;
+const Service: {launchService: (arg: string) => void} =
+  NativeModules.BluetoothServiceLauncher;
 
 export default function Bt_status({route}: StatusScreenProps) {
   const {peripheralId} = route.params;
@@ -51,6 +55,64 @@ export default function Bt_status({route}: StatusScreenProps) {
   const [sliderPressure, setSliderPressure] = React.useState(0);
   const [hardwarePressure, setHardwarePressure] = React.useState(0);
   const targetPressure = React.useRef(0);
+  const appState = React.useRef(AppState.currentState);
+
+  React.useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (appState.current === 'active' && nextAppState !== 'active') {
+        //call background service
+        Service.launchService(peripheralId);
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  });
+
+  /**
+   *
+   * @param cmd
+   */
+  const write = React.useCallback(
+    (cmd: Array<number>) => {
+      try {
+        console.log(`Writing command: ${cmd}`);
+
+        BleManager.retrieveServices(peripheralId).then(val => {
+          BleManager.write(peripheralId, uuid, characteristic_uuid, cmd)
+            .then(() => {
+              database().ref('/write').push({
+                write: 'successful',
+              });
+            })
+            .catch(e => {
+              database().ref('/write').push({e});
+            });
+        });
+      } catch (e) {
+        database()
+          .ref('/write')
+          .push({e, info: 'conversion to array byte not working'});
+      }
+    },
+    [peripheralId],
+  );
+
+  const getPressureStatus = React.useCallback(() => {
+    console.log('Getting bladder pressure...');
+    try {
+      const length = 0x01;
+      const startCmd = 0x24;
+      const cmdSansCrc = cmdIdentifier.concat([length, startCmd]);
+      const crc = parseInt(calculateCRC(cmdSansCrc), 16);
+      const cmd = cmdSansCrc.concat(crc);
+
+      write(cmd);
+    } catch (e) {
+      database().ref('/write').push({e, info: 'getPressureStatus failed.'});
+    }
+  }, [write]);
 
   React.useEffect(() => {
     let bleListener: EmitterSubscription;
@@ -207,7 +269,7 @@ export default function Bt_status({route}: StatusScreenProps) {
     return () => {
       bleListener ? bleManagerEmitter.removeSubscription(bleListener) : null;
     };
-  }, [peripheralId]);
+  }, [getPressureStatus, peripheralId]);
 
   /**
    *
@@ -348,20 +410,6 @@ export default function Bt_status({route}: StatusScreenProps) {
   /**
    *
    */
-  const getPressureStatus = () => {
-    console.log('Getting bladder pressure...');
-    try {
-      const length = 0x01;
-      const startCmd = 0x24;
-      const cmdSansCrc = cmdIdentifier.concat([length, startCmd]);
-      const crc = parseInt(calculateCRC(cmdSansCrc), 16);
-      const cmd = cmdSansCrc.concat(crc);
-
-      write(cmd);
-    } catch (e) {
-      database().ref('/write').push({e, info: 'getPressureStatus failed.'});
-    }
-  };
 
   function calculateCRC(data: number[]) {
     let crc = 0;
@@ -372,32 +420,6 @@ export default function Bt_status({route}: StatusScreenProps) {
 
     return crc.toString(16);
   }
-
-  /**
-   *
-   * @param cmd
-   */
-  const write = (cmd: Array<number>) => {
-    try {
-      console.log(`Writing command: ${cmd}`);
-
-      BleManager.retrieveServices(peripheralId).then(val => {
-        BleManager.write(peripheralId, uuid, characteristic_uuid, cmd)
-          .then(() => {
-            database().ref('/write').push({
-              write: 'successful',
-            });
-          })
-          .catch(e => {
-            database().ref('/write').push({e});
-          });
-      });
-    } catch (e) {
-      database()
-        .ref('/write')
-        .push({e, info: 'conversion to array byte not working'});
-    }
-  };
 
   return (
     <View
@@ -483,7 +505,9 @@ export default function Bt_status({route}: StatusScreenProps) {
               },
               styles.text_container,
             ]}>
-            <Text style={[styles.title, {color: appColors.white}]} onPress={() => getPressureStatus()}>
+            <Text
+              style={[styles.title, {color: appColors.white}]}
+              onPress={() => getPressureStatus()}>
               {hardwarePressure}
             </Text>
           </View>
