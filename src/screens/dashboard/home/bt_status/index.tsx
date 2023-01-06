@@ -153,7 +153,7 @@ export default function Bt_status({route}: StatusScreenProps) {
               if (parsedData.para <= targetPressure.current) {
                 console.log('Still inflating bladder...');
 
-                // getPressureStatus(); // TODO: Add delay
+                getPressureStatus();
               } else {
                 console.log('STOP inflating!');
 
@@ -255,10 +255,10 @@ export default function Bt_status({route}: StatusScreenProps) {
 
     let nextSliderPressure = 0;
 
-    if (sliderPressure === 40) {
+    if (sliderPressure === 20) {
       nextSliderPressure = 0;
-    } else if (sliderPressure - 10 >= 40) {
-    // if (sliderPressure - 10 >= 0) {
+    } else if (sliderPressure - 10 >= 20) {
+      // if (sliderPressure - 10 >= 0) {
       nextSliderPressure = sliderPressure - 10;
     } else {
       nextSliderPressure = sliderPressure;
@@ -286,9 +286,9 @@ export default function Bt_status({route}: StatusScreenProps) {
     let nextSliderPressure = 0;
 
     if (sliderPressure === 0) {
-      nextSliderPressure = 40;
-    } else if (sliderPressure + 10 <= 130) {
-    // if (sliderPressure + 10 <= 130) {
+      nextSliderPressure = 20;
+    } else if (sliderPressure + 10 <= 200) {
+      // if (sliderPressure + 10 <= 200) {
       nextSliderPressure = sliderPressure + 10;
     } else {
       nextSliderPressure = sliderPressure;
@@ -489,7 +489,9 @@ export default function Bt_status({route}: StatusScreenProps) {
               },
               styles.text_container,
             ]}>
-            <Text style={[styles.title, {color: appColors.white}]} onPress={() => getPressureStatus()}>
+            <Text
+              style={[styles.title, {color: appColors.white}]}
+              onPress={() => getPressureStatus()}>
               {hardwarePressure}
             </Text>
           </View>
@@ -526,8 +528,8 @@ export default function Bt_status({route}: StatusScreenProps) {
           }}
           value={sliderPressure}
           step={10}
-          minimumValue={40}
-          maximumValue={130}
+          minimumValue={20}
+          maximumValue={200}
           onSlidingComplete={val => {
             sliderHandler(val);
           }}
