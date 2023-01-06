@@ -1,4 +1,5 @@
 import React from 'react';
+
 import {
   Image,
   View,
@@ -24,6 +25,7 @@ import {
   parseDataPacket,
   buildStartCommandPacket,
   parseResponsePacket,
+  calculateCRC8,
 } from 'src/utils';
 import {btoa} from 'react-native-quick-base64';
 
@@ -33,14 +35,22 @@ const uuid = '0000FFF0-0000-1000-8000-00805F9B34FB';
 const characteristic_uuid = '0000FFF6-0000-1000-8000-00805F9B34FB';
 const cmdIdentifier = [0x55, 0xaa];
 const holdTime = [0xb4, 0x00];
+const SLAVE_STATUS_CMD = 1;
+const SLAVE_ERR_MSG_CMD = 2;
+const PWR_INFO_CMD = 3;
+const MASTER_QUERY_STATUS_CMD = 33;
+const START_CMD = 34;
+const STOP_CMD = 35;
+const MASTER_QUERY_PRESSURE_CMD = 36;
 
 export default function Bt_status({route}: StatusScreenProps) {
   const {peripheralId} = route.params;
-  const batteryStatusDisplayed = React.useRef(false);
+  // const batteryStatusDisplayed = React.useRef(false);
   const [userInput, setInput] = React.useState('');
   const [batterStatus, setBatterStatus] = React.useState(0);
   const [sliderPressure, setSliderPressure] = React.useState(0);
   const [hardwarePressure, setHardwarePressure] = React.useState(0);
+  const targetPressure = React.useRef(0);
 
   React.useEffect(() => {
     let bleListener: EmitterSubscription;
@@ -73,19 +83,84 @@ export default function Bt_status({route}: StatusScreenProps) {
                 bytes: buffer.toString('utf8'),
               });
 
-            if (!(parsedData.cmdCode === 3 && batteryStatusDisplayed.current)) {
-              ToastAndroid.showWithGravity(
-                `Received ${value} for characteristic ${characteristic}`,
-                ToastAndroid.SHORT,
-                ToastAndroid.BOTTOM,
-              );
-            }
+            // if (!(parsedData.cmdCode === 3 && batteryStatusDisplayed.current)) {
+            //   console.log('Displayed to mobile screen.');
 
-            if (parsedData.cmdCode === 3) {
+            //   ToastAndroid.showWithGravity(
+            //     `Received ${value} for characteristic ${characteristic}`,
+            //     ToastAndroid.SHORT,
+            //     ToastAndroid.BOTTOM,
+            //   );
+            // }
+
+            if (parsedData.cmdCode === SLAVE_STATUS_CMD) {
+              console.log(`parsedData: ${JSON.stringify(parsedData)}`);
+              console.log(`Code: ${parsedData.cmdCode} - Slave status report`);
+
+              if (parsedData.para === 0) {
+                console.log('0: Invalid state');
+              } else if (parsedData.para === 1) {
+                console.log('1: Idle state');
+              } else if (parsedData.para === 2) {
+                console.log('2: Start inflation');
+
+                getPressureStatus();
+              } else if (parsedData.para === 3) {
+                console.log('3: Start packing');
+
+                getPressureStatus();
+              } else if (parsedData.para === 4) {
+                console.log('4: Start to deflate');
+
+                getPressureStatus();
+              }
+            } else if (parsedData.cmdCode === SLAVE_ERR_MSG_CMD) {
+              console.log(`parsedData: ${JSON.stringify(parsedData)}`);
+              console.log(`Code: ${parsedData.cmdCode} - Slave error message`);
+            } else if (parsedData.cmdCode === PWR_INFO_CMD) {
+              // console.log(`parsedData: ${JSON.stringify(parsedData)}`);
+              // console.log(
+              //   `Code: ${parsedData.cmdCode} - Report power information from the machine`,
+              // );
+
               setBatterStatus(parsedData.para);
-              batteryStatusDisplayed.current = true;
-            } else if (parsedData.cmdCode === 36) {
+              // batteryStatusDisplayed.current = true;
+            } else if (parsedData.cmdCode === MASTER_QUERY_STATUS_CMD) {
+              console.log(`parsedData: ${JSON.stringify(parsedData)}`);
+              console.log(
+                `Code: ${parsedData.cmdCode} - Master query slave status`,
+              );
+            } else if (parsedData.cmdCode === START_CMD) {
+              console.log(`parsedData: ${JSON.stringify(parsedData)}`);
+              console.log(`Code: ${parsedData.cmdCode} - Start command`);
+            } else if (parsedData.cmdCode === STOP_CMD) {
+              console.log(`parsedData: ${JSON.stringify(parsedData)}`);
+              console.log(`Code: ${parsedData.cmdCode} - Stop command`);
+            } else if (parsedData.cmdCode === MASTER_QUERY_PRESSURE_CMD) {
+              console.log(`parsedData: ${JSON.stringify(parsedData)}`);
+              console.log(
+                `Code: ${parsedData.cmdCode} - The master inquires the slave airbag pressure`,
+              );
+
               setHardwarePressure(parsedData.para);
+
+              console.log(
+                `currentPressure: ${parsedData.para}, targetPressure: ${targetPressure.current}`,
+              );
+
+              if (parsedData.para <= targetPressure.current) {
+                console.log('Still inflating bladder...');
+
+                getPressureStatus();
+              } else {
+                console.log('STOP inflating!');
+
+                // stopInflation();
+                getPressureStatus();
+              }
+            } else {
+              console.log(`parsedData: ${JSON.stringify(parsedData)}`);
+              console.log(`Code: ${parsedData.cmdCode} - Unknown`);
             }
           } catch (e) {
             console.log(e);
@@ -134,10 +209,17 @@ export default function Bt_status({route}: StatusScreenProps) {
     };
   }, [peripheralId]);
 
+  /**
+   *
+   * @param text
+   */
   const processUserInput = (text: string) => {
     setInput(text);
   };
 
+  /**
+   *
+   */
   const submitHandler = () => {
     const userInputArray = userInput.split(',');
     const cmdArray = userInputArray.map(value => {
@@ -152,82 +234,144 @@ export default function Bt_status({route}: StatusScreenProps) {
    * @param value
    */
   const sliderHandler = (value: number) => {
+    console.log(`previousSliderPressure = ${sliderPressure}`);
+
     const hexValue = parseInt(value.toString(16), 16);
 
     setSliderPressure(value);
+    targetPressure.current = value;
 
-    InteractionManager.runAfterInteractions(() => {
-      inflateHardware(hexValue);
-      // getPressureStatus();
-    });
-  };
+    console.log(`nextSliderPressure = ${value}`);
 
-  const decreasePressure = () => {
-    setSliderPressure(s => {
-      return s - 10 >= 40 ? s - 10 : s;
-    });
-
-    const hexValue = parseInt(sliderPressure.toString(16), 16);
-
-    // InteractionManager.runAfterInteractions(() => {
     inflateHardware(hexValue);
-    // getPressureStatus();
-    // });
-  };
-
-  const increasePressure = () => {
-    setSliderPressure(s => {
-      return s + 10 <= 130 ? s + 10 : s;
-    });
-
-    const hexValue = parseInt(sliderPressure.toString(16), 16);
-
-    // InteractionManager.runAfterInteractions(() => {
-    inflateHardware(hexValue);
-    // getPressureStatus();
-    // });
   };
 
   /**
-   * TODO:
-   * Refactor to call the write function
+   *
+   */
+  const decreasePressureHandler = () => {
+    console.log(`previousSliderPressure = ${sliderPressure}`);
+
+    let nextSliderPressure = 0;
+
+    // if (sliderPressure === 40) {
+    //   nextSliderPressure = 0;
+    // } else if (sliderPressure - 10 >= 40) {
+    if (sliderPressure - 10 >= 0) {
+      nextSliderPressure = sliderPressure - 10;
+    } else {
+      nextSliderPressure = sliderPressure;
+    }
+
+    setSliderPressure(nextSliderPressure);
+    targetPressure.current = nextSliderPressure;
+
+    console.log(`nextSliderPressure = ${nextSliderPressure}`);
+
+    const hexValue = parseInt(nextSliderPressure.toString(16), 16);
+
+    stopInflation();
+    inflateHardware(hexValue);
+  };
+
+  /**
+   *
+   */
+  const increasePressureHandler = () => {
+    console.log(`previousSliderPressure = ${sliderPressure}`);
+
+    let nextSliderPressure = 0;
+
+    // if (sliderPressure === 0) {
+    //   nextSliderPressure = 40;
+    // } else if (sliderPressure + 10 <= 130) {
+    if (sliderPressure + 10 <= 130) {
+      nextSliderPressure = sliderPressure + 10;
+    } else {
+      nextSliderPressure = sliderPressure;
+    }
+
+    setSliderPressure(nextSliderPressure);
+    targetPressure.current = nextSliderPressure;
+
+    console.log(`nextSliderPressure = ${nextSliderPressure}`);
+
+    const hexValue = parseInt(nextSliderPressure.toString(16), 16);
+
+    inflateHardware(hexValue);
+  };
+
+  /**
+   *
    * @param peripheralId
    */
   const inflateHardware = (value: number) => {
+    console.log('Inflating bladder...');
+
     try {
-      // const startData = buildStartCommandPacket(80, 10, 6, 0, 4, 4);
-      // const base64 = Array.from(startData);
-      // const bytes = stringToBytes('8010')
-      // const statusCmd = [0x55, 0xaa, 0x01, 0x21, 0x7c];
-      // const inflateCmd = [
-      //   0x55, 0xaa, 0x0a, 0x22, 0x82, 0x00, 0xb4, 0x00, 0x05, 0x00, 0x00, 0x01,
-      //   0x02,
-      // ];
-      const inflateCmd = cmdIdentifier.concat(
-        [0x0a, 0x22, value, 0x00].concat(
-          holdTime.concat([0x05, 0x00, 0x00, 0x01, 0x02]),
+      const length = 0x0a;
+      const startCmd = 0x22;
+      const pressure = [value, 0x00];
+      const cmdSansCrc = cmdIdentifier.concat(
+        [length, startCmd].concat(
+          pressure.concat(holdTime.concat([0x05, 0x00, 0x00, 0x01, 0x02])),
         ),
       );
-
-      write(inflateCmd);
-    } catch (e) {
-      database()
-        .ref('/write')
-        .push({e, info: 'conversion to array byte not working'});
-    }
-  };
-
-  const getPressureStatus = () => {
-    try {
-      const cmd = cmdIdentifier.concat([0x01, 0x24]);
+      const crc = parseInt(calculateCRC(cmdSansCrc), 16);
+      const cmd = cmdSansCrc.concat(crc);
 
       write(cmd);
     } catch (e) {
-      database()
-        .ref('/write')
-        .push({e, info: 'conversion to array byte not working'});
+      database().ref('/write').push({e, info: 'inflateHardware failed.'});
     }
   };
+
+  /**
+   *
+   */
+  const stopInflation = () => {
+    console.log('Stopping bladder inflation...');
+
+    try {
+      const length = 0x01;
+      const stopCmd = 0x23;
+      const cmdSansCrc = cmdIdentifier.concat([length, stopCmd]);
+      const crc = parseInt(calculateCRC(cmdSansCrc), 16);
+      const cmd = cmdSansCrc.concat(crc);
+
+      write(cmd);
+    } catch (e) {
+      database().ref('/write').push({e, info: 'stopInflation failed.'});
+    }
+  };
+
+  /**
+   *
+   */
+  const getPressureStatus = () => {
+    console.log('Getting bladder pressure...');
+    try {
+      const length = 0x01;
+      const startCmd = 0x24;
+      const cmdSansCrc = cmdIdentifier.concat([length, startCmd]);
+      const crc = parseInt(calculateCRC(cmdSansCrc), 16);
+      const cmd = cmdSansCrc.concat(crc);
+
+      write(cmd);
+    } catch (e) {
+      database().ref('/write').push({e, info: 'getPressureStatus failed.'});
+    }
+  };
+
+  function calculateCRC(data: number[]) {
+    let crc = 0;
+
+    for (let i = 0; i < data.length; i++) {
+      crc ^= data[i] << ((i % 4) * 8);
+    }
+
+    return crc.toString(16);
+  }
 
   /**
    *
@@ -339,7 +483,7 @@ export default function Bt_status({route}: StatusScreenProps) {
               },
               styles.text_container,
             ]}>
-            <Text style={[styles.title, {color: appColors.white}]}>
+            <Text style={[styles.title, {color: appColors.white}]} onPress={() => getPressureStatus()}>
               {hardwarePressure}
             </Text>
           </View>
@@ -375,7 +519,7 @@ export default function Bt_status({route}: StatusScreenProps) {
           }}
           value={0}
           step={10}
-          minimumValue={40}
+          minimumValue={0}
           maximumValue={130}
           onSlidingComplete={val => {
             sliderHandler(val);
@@ -390,7 +534,7 @@ export default function Bt_status({route}: StatusScreenProps) {
             marginBottom: normalize(24),
           }}>
           <TouchableOpacity
-            onPress={() => decreasePressure()}
+            onPress={() => decreasePressureHandler()}
             style={{
               justifyContent: 'center',
               alignItems: 'center',
@@ -411,7 +555,7 @@ export default function Bt_status({route}: StatusScreenProps) {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => increasePressure()}
+            onPress={() => increasePressureHandler()}
             style={{
               justifyContent: 'center',
               alignItems: 'center',
