@@ -34,7 +34,8 @@ const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 const uuid = '0000FFF0-0000-1000-8000-00805F9B34FB';
 const characteristic_uuid = '0000FFF6-0000-1000-8000-00805F9B34FB';
 const cmdIdentifier = [0x55, 0xaa];
-const holdTime = [0xb4, 0x00];
+// const holdTime = [0xb4, 0x00];
+const holdTime = [0xff, 0xff];
 const SLAVE_STATUS_CMD = 1;
 const SLAVE_ERR_MSG_CMD = 2;
 const PWR_INFO_CMD = 3;
@@ -42,6 +43,7 @@ const MASTER_QUERY_STATUS_CMD = 33;
 const START_CMD = 34;
 const STOP_CMD = 35;
 const MASTER_QUERY_PRESSURE_CMD = 36;
+const CMD_DELAY = 500;
 
 export default function Bt_status({route}: StatusScreenProps) {
   const {peripheralId} = route.params;
@@ -151,11 +153,10 @@ export default function Bt_status({route}: StatusScreenProps) {
               if (parsedData.para <= targetPressure.current) {
                 console.log('Still inflating bladder...');
 
-                getPressureStatus();
+                // getPressureStatus(); // TODO: Add delay
               } else {
                 console.log('STOP inflating!');
 
-                // stopInflation();
                 getPressureStatus();
               }
             } else {
@@ -254,10 +255,10 @@ export default function Bt_status({route}: StatusScreenProps) {
 
     let nextSliderPressure = 0;
 
-    // if (sliderPressure === 40) {
-    //   nextSliderPressure = 0;
-    // } else if (sliderPressure - 10 >= 40) {
-    if (sliderPressure - 10 >= 0) {
+    if (sliderPressure === 40) {
+      nextSliderPressure = 0;
+    } else if (sliderPressure - 10 >= 40) {
+    // if (sliderPressure - 10 >= 0) {
       nextSliderPressure = sliderPressure - 10;
     } else {
       nextSliderPressure = sliderPressure;
@@ -271,7 +272,9 @@ export default function Bt_status({route}: StatusScreenProps) {
     const hexValue = parseInt(nextSliderPressure.toString(16), 16);
 
     stopInflation();
-    inflateHardware(hexValue);
+    setTimeout(() => {
+      inflateHardware(hexValue);
+    }, CMD_DELAY);
   };
 
   /**
@@ -282,10 +285,10 @@ export default function Bt_status({route}: StatusScreenProps) {
 
     let nextSliderPressure = 0;
 
-    // if (sliderPressure === 0) {
-    //   nextSliderPressure = 40;
-    // } else if (sliderPressure + 10 <= 130) {
-    if (sliderPressure + 10 <= 130) {
+    if (sliderPressure === 0) {
+      nextSliderPressure = 40;
+    } else if (sliderPressure + 10 <= 130) {
+    // if (sliderPressure + 10 <= 130) {
       nextSliderPressure = sliderPressure + 10;
     } else {
       nextSliderPressure = sliderPressure;
@@ -298,7 +301,10 @@ export default function Bt_status({route}: StatusScreenProps) {
 
     const hexValue = parseInt(nextSliderPressure.toString(16), 16);
 
-    inflateHardware(hexValue);
+    stopInflation();
+    setTimeout(() => {
+      inflateHardware(hexValue);
+    }, CMD_DELAY);
   };
 
   /**
@@ -423,7 +429,7 @@ export default function Bt_status({route}: StatusScreenProps) {
       <Text style={styles.pale}>
         Select the preferred pressure of the device.
       </Text>
-      <TextInput
+      {/* <TextInput
         value={userInput}
         onChangeText={processUserInput}
         onSubmitEditing={submitHandler}
@@ -434,7 +440,7 @@ export default function Bt_status({route}: StatusScreenProps) {
           width: '100%',
           color: 'black',
         }}
-      />
+      /> */}
       <View
         style={{
           borderRadius: normalize(16),
@@ -503,10 +509,11 @@ export default function Bt_status({route}: StatusScreenProps) {
           style={[
             styles.pale,
             {
-              marginTop: normalize(32),
+              marginTop: normalize(4),
               marginBottom: normalize(28),
               textAlign: 'left',
               color: 'black',
+              fontSize: normalize(32),
             },
           ]}>
           {sliderPressure}
@@ -517,9 +524,9 @@ export default function Bt_status({route}: StatusScreenProps) {
             height: normalize(8),
             backgroundColor: '#EEEEEE',
           }}
-          value={0}
+          value={sliderPressure}
           step={10}
-          minimumValue={0}
+          minimumValue={40}
           maximumValue={130}
           onSlidingComplete={val => {
             sliderHandler(val);
@@ -578,6 +585,7 @@ export default function Bt_status({route}: StatusScreenProps) {
         </View>
       </View>
       <TouchableOpacity
+        onPress={() => stopInflation()}
         style={{
           borderRadius: normalize(48),
           width: normalize(343),
@@ -594,7 +602,7 @@ export default function Bt_status({route}: StatusScreenProps) {
             fontFamily: appFonts.BARLOW_BD,
             color: appColors.white,
           }}>
-          Continue
+          TEST: STOP
         </Text>
       </TouchableOpacity>
     </View>
