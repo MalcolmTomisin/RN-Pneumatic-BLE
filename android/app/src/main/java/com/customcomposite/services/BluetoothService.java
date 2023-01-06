@@ -8,6 +8,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
@@ -42,13 +43,20 @@ public class BluetoothService extends Service {
             public void onBLEConnect() {
                 // #todo display notif or toast of status
                 Toast.makeText(BluetoothService.this, "Device connected", Toast.LENGTH_SHORT).show();
-
+                Log.d(Utils.TAG, "Connect event run");
             }
 
             @Override
             public void onBLEDisconnect() {
                 // #todo launch retries and handle eventualities
                 Toast.makeText(BluetoothService.this, "Device disconnected", Toast.LENGTH_SHORT).show();
+                Log.d(Utils.TAG, "disconnect event run");
+                for(int i = 0; i < 3; i++){
+                    Log.d(Utils.TAG, "Connection retrying" + " " + i);
+                    if(controller.connect(PERIPHERAL_ID, BluetoothService.this));{
+                        break;
+                    }
+                }
             }
 
             @Override
@@ -58,6 +66,9 @@ public class BluetoothService extends Service {
                     FirebaseDatabase database = FirebaseDatabase.getInstance();
                     DatabaseReference reference = database.getReference("/background");
                     DatabaseReference newRef = reference.push();
+                    Log.d(Utils.TAG, "identification code: " + parsedData.get("identificationCode")
+                            + " dataOutLength: " + parsedData.get("dataOutLength") + " cmdCode: " +
+                            parsedData.get("cmdCode") + " para: " + parsedData.get("para"));
                     newRef.setValue(parsedData);
                 } catch(Exception e){
                     e.printStackTrace();
@@ -69,11 +80,13 @@ public class BluetoothService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if(intent.getAction().equals(Utils.ACTION_START_SERVICE)){
+            Log.d(Utils.TAG, "service running");
             PERIPHERAL_ID = intent.getStringExtra(Utils.HANDLE);
             createNotificationChannel();
             startForeground(NOTIFICATION_ID, buildNotification());
             IS_RUNNING = true;
         } else if(intent.getAction().equals(Utils.ACTION_STOP_SERVICE)) {
+            Log.d(Utils.TAG, "service stopped");
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 stopForeground(flags);
             }
