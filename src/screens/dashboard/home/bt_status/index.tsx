@@ -513,7 +513,7 @@ export default function Bt_status({route}: StatusScreenProps) {
               marginBottom: normalize(28),
               textAlign: 'left',
               color: 'black',
-              fontSize: normalize(32),
+              fontSize: normalize(24),
             },
           ]}>
           {sliderPressure}
