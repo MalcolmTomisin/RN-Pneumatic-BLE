@@ -2,6 +2,7 @@ package com.customcomposite;
 
 import android.content.Intent;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -30,6 +31,7 @@ public class BluetoothServiceLauncher extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void launchService(String peripheralId){
+        Toast.makeText(reactContext, "Calling the service", Toast.LENGTH_SHORT).show();
         if(BluetoothService.IS_RUNNING){
             return;
         }

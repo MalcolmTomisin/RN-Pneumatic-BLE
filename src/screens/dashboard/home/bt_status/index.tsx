@@ -244,7 +244,7 @@ export default function Bt_status({route}: StatusScreenProps) {
     return () => {
       bleListener ? bleManagerEmitter.removeSubscription(bleListener) : null;
     };
-  }, [getPressureStatus, peripheralId, setValue]);
+  }, [getPressureStatus, peripheralId, setPeripheralValue]);
 
   /**
    *

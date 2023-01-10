@@ -80,6 +80,7 @@ public class BluetoothService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if(intent.getAction().equals(Utils.ACTION_START_SERVICE)){
+            Toast.makeText(this, "Service running", Toast.LENGTH_SHORT).show();
             Log.d(Utils.TAG, "service running");
             PERIPHERAL_ID = intent.getStringExtra(Utils.HANDLE);
             createNotificationChannel();
