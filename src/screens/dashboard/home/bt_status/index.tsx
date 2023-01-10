@@ -16,6 +16,7 @@ import BleManager from 'react-native-ble-manager';
 import database from '@react-native-firebase/database';
 import {Buffer} from '@craftzdog/react-native-buffer';
 import {parseDataPacket} from 'src/utils';
+import {PeripheralContext} from 'App';
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
@@ -41,6 +42,8 @@ export default function Bt_status({route}: StatusScreenProps) {
   const [sliderPressure, setSliderPressure] = React.useState(0);
   const [hardwarePressure, setHardwarePressure] = React.useState(0);
   const targetPressure = React.useRef(0);
+  const {peripheralValue, setPeripheralValue} = React.useContext(PeripheralContext);
+
 
   /**
    *
@@ -96,6 +99,7 @@ export default function Bt_status({route}: StatusScreenProps) {
         uuid,
         characteristic_uuid,
       );
+      setPeripheralValue(peripheralId);
       bleListener = bleManagerEmitter.addListener(
         'BleManagerDidUpdateValueForCharacteristic',
         ({value, peripheral: currentPeripheral, characteristic, service}) => {
@@ -240,7 +244,7 @@ export default function Bt_status({route}: StatusScreenProps) {
     return () => {
       bleListener ? bleManagerEmitter.removeSubscription(bleListener) : null;
     };
-  }, [getPressureStatus, peripheralId]);
+  }, [getPressureStatus, peripheralId, setValue]);
 
   /**
    *

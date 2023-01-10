@@ -39,22 +39,38 @@ const Service: {
   closeService: () => void;
 } = NativeModules.BluetoothServiceLauncher;
 
+interface PeripherContextProps {
+  peripheralValue: string;
+  setPeripheralValue: React.Dispatch<React.SetStateAction<string>>;
+}
+
+export const PeripheralContext = React.createContext<PeripherContextProps>({
+  peripheralValue: '',
+  setPeripheralValue: () => {},
+});
+
 const App = () => {
   const isDarkMode = useColorScheme() === 'dark';
   const [isReady, setIsReady] = React.useState(__DEV__ ? true : false);
   const [initialState, setInitialState] = React.useState();
   const theme = isDarkMode ? CombinedDarkTheme : CombinedDefaultTheme;
-  const peripheralId = React.useRef(null);
   const appState = React.useRef(AppState.currentState);
+  const [peripheralValue, setPeripheralValue] = React.useState<string>('');
 
   const handleStateChange = (state?: NavigationState) => {
     if (state) {
-      if (state.routes[state.index].name === appRoutes['Bt Status']) {
-        peripheralId.current = state.routes[state.index].params?.peripheralId;
-        InteractionManager.runAfterInteractions(() => {
-          storage.set(PERSISTENCE_KEY, JSON.stringify(state));
-        });
-      }
+      // if (
+      //   state.routes[state.index]?.state?.routes[
+      //     state.routes[state?.index]?.state?.index
+      //   ]?.state?.routes[state.routes[state.index]?.state?.routes[
+      //     state.routes[state?.index]?.state?.index
+      //   ]?.state?.index]?.params?.peripheralId
+      // ) {
+      //   peripheralId.current = state.routes[state.index].params?.peripheralId;
+      // }
+      InteractionManager.runAfterInteractions(() => {
+        storage.set(PERSISTENCE_KEY, JSON.stringify(state));
+      });
     }
   };
 
@@ -63,8 +79,8 @@ const App = () => {
       if (appState.current === 'active' && nextAppState !== 'active') {
         appState.current = nextAppState;
         //call background service
-        if (peripheralId.current) {
-          Service.launchService(peripheralId.current);
+        if (peripheralValue) {
+          Service.launchService(peripheralValue);
         }
       }
     });
@@ -72,7 +88,7 @@ const App = () => {
     return () => {
       subscription.remove();
     };
-  }, []);
+  }, [peripheralValue]);
 
   React.useEffect(() => {
     const subscription = AppState.addEventListener('change', nextState => {
@@ -124,7 +140,10 @@ const App = () => {
           initialState={initialState}
           onStateChange={handleStateChange}
           theme={theme}>
-          <AppNavigator />
+          <PeripheralContext.Provider
+            value={{peripheralValue, setPeripheralValue}}>
+            <AppNavigator />
+          </PeripheralContext.Provider>
         </NavigationContainer>
       </PaperProvider>
     </GestureHandlerRootView>
