@@ -1,35 +1,21 @@
 import React from 'react';
 
 import {
-  Image,
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   NativeModules,
   NativeEventEmitter,
-  ToastAndroid,
   EmitterSubscription,
-  TextInput,
-  InteractionManager,
-  AppStateStatus,
-  AppState,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
-import ic_chev from 'assets/images/ic_chevron.png';
 import {appColors, appFonts, normalize, normalizeHeight} from 'src/config';
 import {StatusScreenProps} from 'src/navigators/dashboard/connect/types';
 import BleManager from 'react-native-ble-manager';
-import {bytesToString, stringToBytes} from 'convert-string';
 import database from '@react-native-firebase/database';
 import {Buffer} from '@craftzdog/react-native-buffer';
-import {
-  parseDataPacket,
-  buildStartCommandPacket,
-  parseResponsePacket,
-  calculateCRC8,
-} from 'src/utils';
-import {btoa} from 'react-native-quick-base64';
+import {parseDataPacket} from 'src/utils';
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
@@ -45,8 +31,6 @@ const MASTER_QUERY_STATUS_CMD = 33;
 const START_CMD = 34;
 const STOP_CMD = 35;
 const MASTER_QUERY_PRESSURE_CMD = 36;
-const Service: {launchService: (arg: string) => void} =
-  NativeModules.BluetoothServiceLauncher;
 const CMD_DELAY = 500;
 
 export default function Bt_status({route}: StatusScreenProps) {
@@ -57,20 +41,6 @@ export default function Bt_status({route}: StatusScreenProps) {
   const [sliderPressure, setSliderPressure] = React.useState(0);
   const [hardwarePressure, setHardwarePressure] = React.useState(0);
   const targetPressure = React.useRef(0);
-  const appState = React.useRef(AppState.currentState);
-
-  React.useEffect(() => {
-    const subscription = AppState.addEventListener('change', nextAppState => {
-      if (appState.current === 'active' && nextAppState !== 'active') {
-        //call background service
-        Service.launchService(peripheralId);
-      }
-    });
-
-    return () => {
-      subscription.remove();
-    };
-  });
 
   /**
    *
@@ -81,7 +51,7 @@ export default function Bt_status({route}: StatusScreenProps) {
       try {
         console.log(`Writing command: ${cmd}`);
 
-        BleManager.retrieveServices(peripheralId).then(val => {
+        BleManager.retrieveServices(peripheralId).then(() => {
           BleManager.write(peripheralId, uuid, characteristic_uuid, cmd)
             .then(() => {
               database().ref('/write').push({
@@ -128,7 +98,7 @@ export default function Bt_status({route}: StatusScreenProps) {
       );
       bleListener = bleManagerEmitter.addListener(
         'BleManagerDidUpdateValueForCharacteristic',
-        ({value, peripheral, characteristic, service}) => {
+        ({value, peripheral: currentPeripheral, characteristic, service}) => {
           // Convert bytes array to string
           try {
             //const data = bytesToString(value);
@@ -139,7 +109,7 @@ export default function Bt_status({route}: StatusScreenProps) {
               .ref('/debug' + Date.now())
               .set({
                 parsedData,
-                peripheral,
+                peripheral: currentPeripheral,
                 characteristic,
                 service,
                 value,
