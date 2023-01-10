@@ -75,11 +75,15 @@ const App = () => {
   };
 
   React.useEffect(() => {
+    console.log('peripheralValue -> ', peripheralValue);
+
     const subscription = AppState.addEventListener('change', nextAppState => {
       if (appState.current === 'active' && nextAppState !== 'active') {
         appState.current = nextAppState;
         //call background service
         if (peripheralValue) {
+          console.log('Service running...');
+
           Service.launchService(peripheralValue);
         }
       }
