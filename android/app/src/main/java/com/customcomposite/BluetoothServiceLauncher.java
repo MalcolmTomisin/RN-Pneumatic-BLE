@@ -33,6 +33,8 @@ public class BluetoothServiceLauncher extends ReactContextBaseJavaModule {
     public void launchService(String peripheralId){
         Toast.makeText(reactContext, "Calling the service", Toast.LENGTH_SHORT).show();
         if(BluetoothService.IS_RUNNING){
+            Toast.makeText(reactContext, "Bluetooth service already running", Toast.LENGTH_SHORT).show();
+            Log.d(Utils.TAG, "Service already running " + peripheralId);
             return;
         }
         Log.d(Utils.TAG, "Event running with token: " + peripheralId);
