@@ -1,38 +1,62 @@
 package com.customcomposite.services;
 
+import android.app.ActivityManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.os.Binder;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
 import com.customcomposite.MainActivity;
 import com.customcomposite.R;
 import com.customcomposite.controller.BluetoothController;
 import com.customcomposite.controller.ConnectListener;
+import com.facebook.react.bridge.Arguments;
+import com.facebook.react.jstasks.HeadlessJsTaskConfig;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.facebook.react.HeadlessJsTaskService;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
+import java.util.List;
 import java.util.Map;
 
-public class BluetoothService extends Service {
+public class BluetoothService extends HeadlessJsTaskService {
     private String PERIPHERAL_ID = null;
     private BluetoothController controller;
     public static boolean IS_RUNNING = false;
     private static final String CHANNEL_ID = "Composite channel";
     private static final int NOTIFICATION_ID = 12345678;
+    private final IBinder mBinder = new LocalBinder();
+    private boolean mChangingConfiguration = false;
 
     public BluetoothService() {
     }
+
+    @Nullable
+    @Override
+    protected HeadlessJsTaskConfig getTaskConfig(Intent intent) {
+        Bundle extras = intent.getExtras();
+        if (extras != null) {
+            return new HeadlessJsTaskConfig(
+                    "Headless",
+                    Arguments.fromBundle(extras),
+                    5000, // timeout for the task
+                    true // optional: defines whether or not  the task is allowed in foreground. Default is false
+            );
+        }
+        return null;
+    }
+
 
     @Override
     public void onCreate() {
@@ -131,6 +155,12 @@ public class BluetoothService extends Service {
         }
     }
 
+    public class LocalBinder extends Binder {
+        BluetoothService getService() {
+            return BluetoothService.this;
+        }
+    }
+
     private boolean checkIfConnected(){
         // #TODO check if bluetooth connection with BLE peripheral still valid
         return false;
@@ -139,6 +169,63 @@ public class BluetoothService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         // TODO: Return the communication channel to the service.
-       return null;
+        stopForeground(true);
+       return mBinder;
+    }
+
+    @Override
+    public void onRebind(Intent intent) {
+        // Called when a client (MainActivity in case of this sample) returns to the foreground
+        // and binds once again with this service. The service should cease to be a foreground
+        // service when that happens.
+        Log.i(Utils.TAG, "in onRebind()");
+        stopForeground(true);
+        mChangingConfiguration = false;
+        super.onRebind(intent);
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        Log.i(Utils.TAG, "Last client unbound from service");
+
+        // Called when the last client (MainActivity in case of this sample) unbinds from this
+        // service. If this method is called due to a configuration change in MainActivity, we
+        // do nothing. Otherwise, we make this service a foreground service.
+        if (!mChangingConfiguration) {
+            Log.i(Utils.TAG, "Starting foreground service");
+            /*
+            // TODO(developer). If targeting O, use the following code.
+            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O) {
+                mNotificationManager.startServiceInForeground(new Intent(this,
+                        LocationUpdatesService.class), NOTIFICATION_ID, getNotification());
+            } else {
+                startForeground(NOTIFICATION_ID, getNotification());
+            }
+             */
+            startForeground(NOTIFICATION_ID, buildNotification());
+        }
+        return true; // Ensures onRebind() is called when a client re-binds.
+    }
+
+    private boolean isAppOnForeground(Context context) {
+        /**
+         We need to check if app is in foreground otherwise the app will crash.
+         http://stackoverflow.com/questions/8489993/check-android-application-is-in-foreground-or-not
+         **/
+        ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningAppProcessInfo> appProcesses =
+                activityManager.getRunningAppProcesses();
+        if (appProcesses == null) {
+            return false;
+        }
+        final String packageName = context.getPackageName();
+        for (ActivityManager.RunningAppProcessInfo appProcess : appProcesses) {
+            if (appProcess.importance ==
+                    ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND &&
+                    appProcess.processName.equals(packageName)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
