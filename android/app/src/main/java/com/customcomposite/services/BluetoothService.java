@@ -87,6 +87,7 @@ public class BluetoothService extends Service {
             startForeground(NOTIFICATION_ID, buildNotification());
             IS_RUNNING = true;
         } else if(intent.getAction().equals(Utils.ACTION_STOP_SERVICE)) {
+            Toast.makeText(this, "Service stopped", Toast.LENGTH_SHORT).show();
             Log.d(Utils.TAG, "service stopped");
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 stopForeground(flags);
@@ -138,6 +139,6 @@ public class BluetoothService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         // TODO: Return the communication channel to the service.
-        throw new UnsupportedOperationException("Not yet implemented");
+       return null;
     }
 }
