@@ -1,6 +1,7 @@
 package com.customcomposite;
 
 import android.content.Intent;
+import android.os.Build;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -41,6 +42,10 @@ public class BluetoothServiceLauncher extends ReactContextBaseJavaModule {
         Intent startIntent = new Intent(reactContext, BluetoothService.class);
         startIntent.setAction(Utils.ACTION_START_SERVICE);
         startIntent.putExtra(Utils.HANDLE, peripheralId);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            reactContext.startForegroundService(startIntent);
+            return;
+        }
         reactContext.startService(startIntent);
     }
 
