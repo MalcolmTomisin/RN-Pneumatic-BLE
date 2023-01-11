@@ -10,7 +10,11 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.IBinder;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -118,7 +122,11 @@ public class CompositeBluetoothService extends HeadlessJsTaskService {
             Log.d(Utils.TAG, "service running with id " + PERIPHERAL_ID);
             PERIPHERAL_ID = intent.getStringExtra(Utils.HANDLE);
             if(PERIPHERAL_ID == null){
-                PERIPHERAL_ID = Utils.fetchMacAddress(this);
+                MyHandlerThread mMyHandlerThread = new MyHandlerThread("MyHandlerThread");
+                mMyHandlerThread.start();
+                // Enqueue some work
+                mMyHandlerThread.enqueueWork("some input");
+                mMyHandlerThread.quitSafely();
             }
             createNotificationChannel();
             startForeground(NOTIFICATION_ID, buildNotification());
@@ -247,5 +255,38 @@ public class CompositeBluetoothService extends HeadlessJsTaskService {
     public void onDestroy() {
         super.onDestroy();
         IS_RUNNING = false;
+    }
+
+    private class MyHandlerThread extends HandlerThread {
+        private Handler mWorkerHandler;
+        private String result;
+
+        public MyHandlerThread(String name) {
+            super(name);
+        }
+
+        @Override
+        protected void onLooperPrepared() {
+            mWorkerHandler = new Handler(getLooper()) {
+                @Override
+                public void handleMessage(Message msg) {
+                    // Perform task in background thread
+                    result = Utils.fetchMacAddress(CompositeBluetoothService.this);
+                    // Update UI on main thread
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            // Use the result here
+                            Log.d(Utils.TAG, "Running result of background work here = " + result);
+                            PERIPHERAL_ID = result;
+                        }
+                    });
+                }
+            };
+        }
+
+        public void enqueueWork(String input) {
+            mWorkerHandler.obtainMessage(0, input).sendToTarget();
+        }
     }
 }
