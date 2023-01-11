@@ -184,6 +184,7 @@ export default function Bt_status({route}: StatusScreenProps) {
 
               database().ref('/results').push({
                 macAddress: currentPeripheral,
+                deviceName: peripheral.name,
                 key: 'Pressure',
                 value: parsedData.para,
                 dateTimeAcquired: Date.now(),
