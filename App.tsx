@@ -30,8 +30,9 @@ import {
   appRoutes,
 } from 'src/config';
 import {MMKV} from 'react-native-mmkv';
-import {storage, PERSISTENCE_KEY} from 'src/utils';
+import {storage, PERSISTENCE_KEY, PERIPHERAL_KEY} from 'src/utils';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
+var SharedPreferences = require('react-native-shared-preferences');
 import codePush from 'react-native-code-push';
 
 const Service: {
@@ -83,7 +84,9 @@ const App = () => {
         //call background service
         if (peripheralValue) {
           console.log('Service running...');
-
+          InteractionManager.runAfterInteractions(() => {
+            SharedPreferences.setItem(PERIPHERAL_KEY, peripheralValue);
+          });
           Service.launchService(peripheralValue);
         }
       }

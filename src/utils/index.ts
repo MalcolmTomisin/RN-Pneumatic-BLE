@@ -4,6 +4,7 @@ import {stringify as uuidStringify} from 'uuid';
 
 export const storage = new MMKV();
 export const PERSISTENCE_KEY = 'NAVIGATION_STATE';
+export const PERIPHERAL_KEY = 'KEY12345';
 
 function isHex(h: string) {
   var a = parseInt(h, 16);

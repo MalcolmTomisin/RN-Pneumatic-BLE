@@ -99,7 +99,7 @@ public class CompositeBluetoothService extends HeadlessJsTaskService {
                 }
             }
         });
-        Boolean isPeripheralConnected = controller.isConnected(PERIPHERAL_ID);
+        Boolean isPeripheralConnected = PERIPHERAL_ID != null && controller.isConnected(PERIPHERAL_ID);
         if(PERIPHERAL_ID != null && !isPeripheralConnected){
             Log.d(Utils.TAG, "Controller disconnected");
             isPeripheralConnected = controller.connect(PERIPHERAL_ID, this);
@@ -117,6 +117,9 @@ public class CompositeBluetoothService extends HeadlessJsTaskService {
             Toast.makeText(this, "Service running", Toast.LENGTH_SHORT).show();
             Log.d(Utils.TAG, "service running with id " + PERIPHERAL_ID);
             PERIPHERAL_ID = intent.getStringExtra(Utils.HANDLE);
+            if(PERIPHERAL_ID == null){
+                PERIPHERAL_ID = Utils.fetchMacAddress(this);
+            }
             createNotificationChannel();
             startForeground(NOTIFICATION_ID, buildNotification());
             IS_RUNNING = true;
@@ -141,6 +144,7 @@ public class CompositeBluetoothService extends HeadlessJsTaskService {
         Intent stopServiceIntent = new Intent(this, CompositeBluetoothService.class);
         stopServiceIntent.setAction(Utils.ACTION_STOP_SERVICE);
         PendingIntent stopServicePending = PendingIntent.getService(this, 0, stopServiceIntent, 0);
+
 
         return new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Composite updates")
