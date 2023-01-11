@@ -42,8 +42,8 @@ export default function Bt_status({route}: StatusScreenProps) {
   const [sliderPressure, setSliderPressure] = React.useState(0);
   const [hardwarePressure, setHardwarePressure] = React.useState(0);
   const targetPressure = React.useRef(0);
-  const {peripheralValue, setPeripheralValue} = React.useContext(PeripheralContext);
-
+  const {peripheralValue, setPeripheralValue} =
+    React.useContext(PeripheralContext);
 
   /**
    *
@@ -181,6 +181,16 @@ export default function Bt_status({route}: StatusScreenProps) {
               );
 
               setHardwarePressure(parsedData.para);
+
+              database().ref('/results').push({
+                resultId: '',
+                macAddress: currentPeripheral,
+                key: 'Pressure',
+                value: parsedData.para,
+                dateTimeAcquired: Date.now(),
+                parsedData: parsedData,
+                rawData: value,
+              });
 
               console.log(
                 `currentPressure: ${parsedData.para}, targetPressure: ${targetPressure.current}`,
