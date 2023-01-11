@@ -1,5 +1,12 @@
 package com.customcomposite.services;
 
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
+
+import com.facebook.react.modules.storage.ReactDatabaseSupplier;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.HashMap;
@@ -11,6 +18,8 @@ public class Utils {
     public static final String ACTION_STOP_SERVICE = "stop service";
     public static final String TAG = "com.customcomposite";
     public static final String HANDLE = "handle";
+    private static final String PERIPHERAL_KEY = "KEY12345";
+
 
     public static Map<String, Object> parseDataPacket(byte[] data) throws Exception {
         // Create a ByteBuffer for the data
@@ -41,6 +50,29 @@ public class Utils {
         fields.put("para", para);
         fields.put("crc8", crc8);
         return fields;
+    }
+
+    public static String fetchMacAddress(Context context){
+        SQLiteDatabase readableDatabase = ReactDatabaseSupplier.getInstance(context).getReadableDatabase();
+        Cursor catalystLocalStorage = readableDatabase.query("catalystLocalStorage", new String[]{"value"}, "key = ?", new String[] {PERIPHERAL_KEY}, null, null, null);
+        try {
+            String peripheralAddress = catalystLocalStorage.getString(catalystLocalStorage.getColumnIndexOrThrow("value"));
+            Log.d(TAG, "get peripheral id from storage layer" + peripheralAddress);
+            catalystLocalStorage.close();
+            readableDatabase.close();
+            return  peripheralAddress;
+        }
+        catch (IllegalArgumentException exception){
+            exception.printStackTrace();
+        }
+
+        finally {
+            if (catalystLocalStorage != null) {
+                catalystLocalStorage.close();
+            }
+            readableDatabase.close();
+        }
+        return null;
     }
 
 
