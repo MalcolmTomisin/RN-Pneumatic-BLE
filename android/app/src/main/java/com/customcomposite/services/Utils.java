@@ -54,25 +54,7 @@ public class Utils {
     }
 
     public static String fetchMacAddress(Context context){
-        SharedPreferences settings = context.getSharedPreferences("wit_player_shared_preferences", context.MODE_PRIVATE);
-//        try {
-//            String peripheralAddress = catalystLocalStorage.getString(catalystLocalStorage.getColumnIndexOrThrow("value"));
-//            Log.d(TAG, "get peripheral id from storage layer" + peripheralAddress);
-//            catalystLocalStorage.close();
-//            readableDatabase.close();
-//            return  peripheralAddress;
-//        }
-//        catch (IllegalArgumentException exception){
-//            exception.printStackTrace();
-//        }
-//
-//        finally {
-//            if (catalystLocalStorage != null) {
-//                catalystLocalStorage.close();
-//            }
-//            readableDatabase.close();
-//        }
-
+        SharedPreferences settings = context.getSharedPreferences("BLEManager", Context.MODE_PRIVATE);
         return settings.getString(PERIPHERAL_KEY, null);
     }
 
