@@ -183,8 +183,8 @@ export default function Bt_status({route}: StatusScreenProps) {
               setHardwarePressure(parsedData.para);
 
               database().ref('/results').push({
-                resultId: '',
                 macAddress: currentPeripheral,
+                deviceName: peripheral.name,
                 key: 'Pressure',
                 value: parsedData.para,
                 dateTimeAcquired: Date.now(),
@@ -318,9 +318,12 @@ export default function Bt_status({route}: StatusScreenProps) {
     const hexValue = parseInt(nextSliderPressure.toString(16), 16);
 
     stopInflation();
-    setTimeout(() => {
-      inflateHardware(hexValue);
-    }, CMD_DELAY);
+
+    if (hexValue > 0) {
+      setTimeout(() => {
+        inflateHardware(hexValue);
+      }, CMD_DELAY);
+    }
   };
 
   /**
