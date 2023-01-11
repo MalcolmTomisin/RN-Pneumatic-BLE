@@ -30,7 +30,7 @@ import com.facebook.react.HeadlessJsTaskService;
 import java.util.List;
 import java.util.Map;
 
-public class BluetoothService extends HeadlessJsTaskService {
+public class CompositeBluetoothService extends HeadlessJsTaskService {
     private String PERIPHERAL_ID = null;
     private BluetoothController controller;
     public static boolean IS_RUNNING = false;
@@ -39,7 +39,7 @@ public class BluetoothService extends HeadlessJsTaskService {
     private final IBinder mBinder = new LocalBinder();
     private boolean mChangingConfiguration = false;
 
-    public BluetoothService() {
+    public CompositeBluetoothService() {
     }
 
     @Nullable
@@ -66,18 +66,18 @@ public class BluetoothService extends HeadlessJsTaskService {
             @Override
             public void onBLEConnect() {
                 // #todo display notif or toast of status
-                Toast.makeText(BluetoothService.this, "Device connected", Toast.LENGTH_SHORT).show();
+                Toast.makeText(CompositeBluetoothService.this, "Device connected", Toast.LENGTH_SHORT).show();
                 Log.d(Utils.TAG, "Connect event run");
             }
 
             @Override
             public void onBLEDisconnect() {
                 // #todo launch retries and handle eventualities
-                Toast.makeText(BluetoothService.this, "Device disconnected", Toast.LENGTH_SHORT).show();
+                Toast.makeText(CompositeBluetoothService.this, "Device disconnected", Toast.LENGTH_SHORT).show();
                 Log.d(Utils.TAG, "disconnect event run");
                 for(int i = 0; i < 3; i++){
                     Log.d(Utils.TAG, "Connection retrying" + " " + i);
-                    if(controller.connect(PERIPHERAL_ID, BluetoothService.this));{
+                    if(controller.connect(PERIPHERAL_ID, CompositeBluetoothService.this));{
                         break;
                     }
                 }
@@ -103,6 +103,7 @@ public class BluetoothService extends HeadlessJsTaskService {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d(Utils.TAG, "service running outside");
         if(intent.getAction().equals(Utils.ACTION_START_SERVICE)){
             Toast.makeText(this, "Service running", Toast.LENGTH_SHORT).show();
             Log.d(Utils.TAG, "service running");
@@ -121,14 +122,14 @@ public class BluetoothService extends HeadlessJsTaskService {
             IS_RUNNING = false;
         }
 
-        return START_NOT_STICKY;
+        return START_STICKY;
     }
 
     private Notification buildNotification(){
         Intent notificationIntent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this,
                 0, notificationIntent, 0);
-        Intent stopServiceIntent = new Intent(this, BluetoothService.class);
+        Intent stopServiceIntent = new Intent(this, CompositeBluetoothService.class);
         stopServiceIntent.setAction(Utils.ACTION_STOP_SERVICE);
         PendingIntent stopServicePending = PendingIntent.getService(this, 0, stopServiceIntent, 0);
 
@@ -156,8 +157,8 @@ public class BluetoothService extends HeadlessJsTaskService {
     }
 
     public class LocalBinder extends Binder {
-        BluetoothService getService() {
-            return BluetoothService.this;
+        CompositeBluetoothService getService() {
+            return CompositeBluetoothService.this;
         }
     }
 

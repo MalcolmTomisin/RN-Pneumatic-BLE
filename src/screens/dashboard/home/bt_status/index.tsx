@@ -99,7 +99,7 @@ export default function Bt_status({route}: StatusScreenProps) {
         uuid,
         characteristic_uuid,
       );
-      setPeripheralValue(peripheralId);
+      //setPeripheralValue(peripheralId);
       bleListener = bleManagerEmitter.addListener(
         'BleManagerDidUpdateValueForCharacteristic',
         ({value, peripheral: currentPeripheral, characteristic, service}) => {

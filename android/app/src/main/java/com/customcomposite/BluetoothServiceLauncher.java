@@ -8,7 +8,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.customcomposite.services.BluetoothService;
+import com.customcomposite.services.CompositeBluetoothService;
 import com.customcomposite.services.Utils;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -33,13 +33,13 @@ public class BluetoothServiceLauncher extends ReactContextBaseJavaModule {
     @ReactMethod
     public void launchService(String peripheralId){
         Toast.makeText(reactContext, "Calling the service", Toast.LENGTH_SHORT).show();
-        if(BluetoothService.IS_RUNNING){
+        if(CompositeBluetoothService.IS_RUNNING){
             Toast.makeText(reactContext, "Bluetooth service already running", Toast.LENGTH_SHORT).show();
             Log.d(Utils.TAG, "Service already running " + peripheralId);
             return;
         }
         Log.d(Utils.TAG, "Event running with token: " + peripheralId);
-        Intent startIntent = new Intent(reactContext, BluetoothService.class);
+        Intent startIntent = new Intent(reactContext, CompositeBluetoothService.class);
         startIntent.setAction(Utils.ACTION_START_SERVICE);
         startIntent.putExtra(Utils.HANDLE, peripheralId);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -52,10 +52,10 @@ public class BluetoothServiceLauncher extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void closeService(){
-        if(!BluetoothService.IS_RUNNING){
+        if(!CompositeBluetoothService.IS_RUNNING){
             return;
         }
-        Intent stopIntent = new Intent(reactContext, BluetoothService.class);
+        Intent stopIntent = new Intent(reactContext, CompositeBluetoothService.class);
         stopIntent.setAction(Utils.ACTION_STOP_SERVICE);
         reactContext.stopService(stopIntent);
     }
