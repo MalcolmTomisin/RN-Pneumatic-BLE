@@ -56,12 +56,13 @@ public class BluetoothController implements Control {
             Log.e(TAG, "Unable to obtain a BluetoothAdapter.");
             return false;
         }
+        Log.d(TAG, "bluetooth adapter successfully initialized");
         return true;
     }
 
     public boolean connect(final String PERIPHERAL, final Context ctx) {
         if (bluetoothAdapter == null || PERIPHERAL == null) {
-            Log.w(TAG, "BluetoothAdapter not initialized or unspecified address.");
+            Log.d(TAG, "BluetoothAdapter not initialized or unspecified address.");
             return false;
         }
         try {
@@ -75,13 +76,14 @@ public class BluetoothController implements Control {
                 //                                          int[] grantResults)
                 // to handle the case where the user grants the permission. See the documentation
                 // for ActivityCompat#requestPermissions for more details.
-                Log.w(TAG, "Bluetooth controller doesn't have permission");
+                Log.d(TAG, "Bluetooth controller doesn't have permission");
                 return false;
             }
             bluetoothGatt = device.connectGatt(ctx, false, bluetoothGattCallback);
+            Log.d(TAG, "Connection successful");
             return true;
         } catch (IllegalArgumentException exception) {
-            Log.w(TAG, "Device not found with provided address.  Unable to connect.");
+            Log.d(TAG, "Device not found with provided address.  Unable to connect.");
             return false;
         }
     }
