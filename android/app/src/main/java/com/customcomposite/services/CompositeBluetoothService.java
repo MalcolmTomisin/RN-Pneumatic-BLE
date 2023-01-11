@@ -66,6 +66,16 @@ public class CompositeBluetoothService extends HeadlessJsTaskService {
     public void onCreate() {
         super.onCreate();
         controller = new BluetoothController();
+
+        if(PERIPHERAL_ID == null){
+            PERIPHERAL_ID = Utils.fetchMacAddress(this);
+            // MyHandlerThread mMyHandlerThread = new MyHandlerThread("MyHandlerThread");
+            // mMyHandlerThread.start();
+            // // Enqueue some work
+            // mMyHandlerThread.enqueueWork("some input");
+            // mMyHandlerThread.quitSafely();
+        }
+
         controller.init(new ConnectListener() {
             @Override
             public void onBLEConnect() {
@@ -121,13 +131,6 @@ public class CompositeBluetoothService extends HeadlessJsTaskService {
             Toast.makeText(this, "Service running", Toast.LENGTH_SHORT).show();
             Log.d(Utils.TAG, "service running with id " + PERIPHERAL_ID);
             PERIPHERAL_ID = intent.getStringExtra(Utils.HANDLE);
-            if(PERIPHERAL_ID == null){
-                MyHandlerThread mMyHandlerThread = new MyHandlerThread("MyHandlerThread");
-                mMyHandlerThread.start();
-                // Enqueue some work
-                mMyHandlerThread.enqueueWork("some input");
-                mMyHandlerThread.quitSafely();
-            }
             createNotificationChannel();
             startForeground(NOTIFICATION_ID, buildNotification());
             IS_RUNNING = true;
