@@ -51,10 +51,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@style/AppTheme">
         <service
-            android:name=".services.BluetoothService"
-            android:enabled="false"
+            android:name=".services.CompositeBluetoothService"
+            android:enabled="true"
             android:foregroundServiceType="connectedDevice"
-            android:exported="false"></service>
+            android:exported="false" />
 
         <activity
             android:name=".MainActivity"

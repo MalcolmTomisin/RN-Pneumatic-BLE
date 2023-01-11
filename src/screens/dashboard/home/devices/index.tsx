@@ -26,6 +26,7 @@ import {DeviceConnectProps} from 'src/navigators/dashboard/connect/types';
 import BleManager from 'react-native-ble-manager';
 import {check, PERMISSIONS, RESULTS} from 'react-native-permissions';
 import {hexToUUID} from 'src/utils';
+import {PeripheralContext} from 'App';
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
@@ -66,6 +67,8 @@ export default function ListDevices({navigation}: DeviceConnectProps) {
   const [list, setList] = React.useState([]);
   const [isScanning, setIsScanning] = React.useState<boolean>(false);
   const peripherals = new Map();
+  const {peripheralValue, setPeripheralValue} =
+    React.useContext(PeripheralContext);
 
   const startScan = () => {
     BleManager.scan([], 15, true)
@@ -80,7 +83,7 @@ export default function ListDevices({navigation}: DeviceConnectProps) {
   };
 
   const handleDiscoverPeripheral = peripheral => {
-    // console.log('Got ble peripheral', peripheral);
+    //console.log('Got ble peripheral', peripheral);
     if (!peripheral.name) {
       peripheral.name = 'NO NAME';
     }
@@ -164,44 +167,47 @@ export default function ListDevices({navigation}: DeviceConnectProps) {
         Pair with your device below. Make sure your device is powered on.
       </Text>
 
-      {list.map((v, i) => (
-        <TouchableOpacity
-          key={`${i}`}
-          style={{
-            backgroundColor: appColors.white,
-            marginVertical: normalize(4),
-            borderRadius: normalize(8),
-            padding: 10,
-          }}
-          onPress={() => {
-            BleManager.connect(v.id)
-              .then(() => {
-                ToastAndroid.showWithGravity(
-                  'connected',
-                  ToastAndroid.SHORT,
-                  ToastAndroid.BOTTOM,
-                );
-                navigation.navigate(appRoutes['Bt Status'], {
-                  peripheralId: v.id,
-                });
-              })
-              .catch(() => {
-                ToastAndroid.showWithGravity(
-                  'error in connection',
-                  ToastAndroid.SHORT,
-                  ToastAndroid.BOTTOM,
-                );
-              });
-          }}>
-          <Text
+      {list
+        .filter(v => v?.advertising?.isConnectable)
+        .map((v, i) => (
+          <TouchableOpacity
+            key={`${i}`}
             style={{
-              fontFamily: appFonts.BARLOW_RG,
-              fontSize: normalize(16),
-              lineHeight: normalize(16 * 1.7),
-              color: appColors.shade3,
-            }}>{`${v.name ? v.name : 'NO NAME'}`}</Text>
-        </TouchableOpacity>
-      ))}
+              backgroundColor: appColors.white,
+              marginVertical: normalize(4),
+              borderRadius: normalize(8),
+              padding: 10,
+            }}
+            onPress={() => {
+              BleManager.connect(v.id)
+                .then(() => {
+                  setPeripheralValue(v.id);
+                  ToastAndroid.showWithGravity(
+                    'connected',
+                    ToastAndroid.SHORT,
+                    ToastAndroid.BOTTOM,
+                  );
+                  navigation.navigate(appRoutes['Bt Status'], {
+                    peripheralId: v.id,
+                  });
+                })
+                .catch(() => {
+                  ToastAndroid.showWithGravity(
+                    'error in connection',
+                    ToastAndroid.SHORT,
+                    ToastAndroid.BOTTOM,
+                  );
+                });
+            }}>
+            <Text
+              style={{
+                fontFamily: appFonts.BARLOW_RG,
+                fontSize: normalize(16),
+                lineHeight: normalize(16 * 1.7),
+                color: appColors.shade3,
+              }}>{`${v.name ? v.name : 'NO NAME'}`}</Text>
+          </TouchableOpacity>
+        ))}
       <View style={{paddingTop: normalizeHeight(100)}}>
         <Button
           style={[
