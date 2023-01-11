@@ -318,9 +318,12 @@ export default function Bt_status({route}: StatusScreenProps) {
     const hexValue = parseInt(nextSliderPressure.toString(16), 16);
 
     stopInflation();
-    setTimeout(() => {
-      inflateHardware(hexValue);
-    }, CMD_DELAY);
+
+    if (hexValue > 0) {
+      setTimeout(() => {
+        inflateHardware(hexValue);
+      }, CMD_DELAY);
+    }
   };
 
   /**
