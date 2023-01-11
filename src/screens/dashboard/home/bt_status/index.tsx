@@ -183,7 +183,6 @@ export default function Bt_status({route}: StatusScreenProps) {
               setHardwarePressure(parsedData.para);
 
               database().ref('/results').push({
-                resultId: '',
                 macAddress: currentPeripheral,
                 key: 'Pressure',
                 value: parsedData.para,
