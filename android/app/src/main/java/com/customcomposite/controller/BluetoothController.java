@@ -6,12 +6,15 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
+
+import java.util.UUID;
 
 public class BluetoothController implements Control {
     private BluetoothAdapter bluetoothAdapter;
@@ -92,7 +95,22 @@ public class BluetoothController implements Control {
 
     @Override
     public void increasePressure() {
+     if(bluetoothGatt != null){
+         try{
+             UUID serviceUUID = UUID.fromString("0000FFF0-0000-1000-8000-00805F9B34FB");
+             UUID charUUID = UUID.fromString("0000FFF6-0000-1000-8000-00805F9B34FB");
+             BluetoothGattService service = bluetoothGatt.getService(serviceUUID);
+             BluetoothGattCharacteristic characteristic = service.getCharacteristic(charUUID);
 
+//write value to characteristic
+             byte[] value = new byte[]{0x55, (byte) 0xaa, 0x01, 0x24, 0x00 };
+             characteristic.setValue(value);
+             bluetoothGatt.writeCharacteristic(characteristic);
+         }
+         catch(SecurityException e){
+            e.printStackTrace();
+         }
+     }
     }
 
     @Override

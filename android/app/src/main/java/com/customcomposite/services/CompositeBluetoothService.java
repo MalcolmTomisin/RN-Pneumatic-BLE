@@ -122,6 +122,15 @@ public class CompositeBluetoothService extends HeadlessJsTaskService {
             }
         }
         Log.d(Utils.TAG, isPeripheralConnected ? "Connected to peripheral" : "Peripheral not connected");
+        if(isPeripheralConnected){
+            Handler handler = new Handler();
+
+            Runnable task = () -> {
+                // Perform the task here
+                controller.increasePressure();
+            };
+            handler.postDelayed(task, 600);
+        }
     }
 
     @Override
