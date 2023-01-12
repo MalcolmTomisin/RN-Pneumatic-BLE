@@ -33,6 +33,7 @@ import com.facebook.react.HeadlessJsTaskService;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CompositeBluetoothService extends HeadlessJsTaskService {
     private String PERIPHERAL_ID = null;
@@ -69,11 +70,7 @@ public class CompositeBluetoothService extends HeadlessJsTaskService {
 
         if(PERIPHERAL_ID == null){
             PERIPHERAL_ID = Utils.fetchMacAddress(this);
-            // MyHandlerThread mMyHandlerThread = new MyHandlerThread("MyHandlerThread");
-            // mMyHandlerThread.start();
-            // // Enqueue some work
-            // mMyHandlerThread.enqueueWork("some input");
-            // mMyHandlerThread.quitSafely();
+            controller.connect(PERIPHERAL_ID, this);
         }
 
         controller.init(new ConnectListener() {
@@ -91,9 +88,7 @@ public class CompositeBluetoothService extends HeadlessJsTaskService {
                 Log.d(Utils.TAG, "disconnect event run");
                 for(int i = 0; i < 3; i++){
                     Log.d(Utils.TAG, "Connection retrying" + " " + i);
-                    if(controller.connect(PERIPHERAL_ID, CompositeBluetoothService.this));{
-                        break;
-                    }
+                    controller.connect(PERIPHERAL_ID, CompositeBluetoothService.this);
                 }
             }
 
@@ -113,16 +108,22 @@ public class CompositeBluetoothService extends HeadlessJsTaskService {
                 }
             }
         });
-        Boolean isPeripheralConnected = PERIPHERAL_ID != null && controller.isConnected(PERIPHERAL_ID);
-        if(PERIPHERAL_ID != null && !isPeripheralConnected){
-            Log.d(Utils.TAG, "Controller disconnected");
-            isPeripheralConnected = controller.connect(PERIPHERAL_ID, this);
-            if (!isPeripheralConnected){
-                Log.d(Utils.TAG, "Unable to connect to peripheral");
+        AtomicBoolean isPeripheralConnected = new AtomicBoolean(false);
+        Handler btHandler = new Handler();
+        Runnable checkBT = () -> {
+            isPeripheralConnected.set(PERIPHERAL_ID != null && controller.isConnected(PERIPHERAL_ID));
+            if(PERIPHERAL_ID != null && !isPeripheralConnected.get()){
+                Log.d(Utils.TAG, "Controller disconnected");
+                isPeripheralConnected.set(controller.isConnected(PERIPHERAL_ID));
+                if (!isPeripheralConnected.get()){
+                    Log.d(Utils.TAG, "Unable to connect to peripheral");
+                }
             }
-        }
-        Log.d(Utils.TAG, isPeripheralConnected ? "Connected to peripheral" : "Peripheral not connected");
-        if(isPeripheralConnected){
+            Log.d(Utils.TAG, isPeripheralConnected.get() ? "Connected to peripheral" : "Peripheral not connected");
+        };
+
+        btHandler.postDelayed(checkBT, 300);
+        if(isPeripheralConnected.get()){
             Handler handler = new Handler();
 
             Runnable task = () -> {
