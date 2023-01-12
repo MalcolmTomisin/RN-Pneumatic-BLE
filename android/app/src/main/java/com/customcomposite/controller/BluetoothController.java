@@ -1,6 +1,7 @@
 package com.customcomposite.controller;
 
 import android.Manifest;
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -10,6 +11,7 @@ import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
@@ -63,31 +65,38 @@ public class BluetoothController implements Control {
         return true;
     }
 
-    public boolean connect(final String PERIPHERAL, final Context ctx) {
+    public void connect(final String PERIPHERAL, final Context ctx) {
         if (bluetoothAdapter == null || PERIPHERAL == null) {
             Log.d(TAG, "BluetoothAdapter not initialized or unspecified address.");
-            return false;
         }
         try {
             device = bluetoothAdapter.getRemoteDevice(PERIPHERAL);
             // connect to the GATT server on the device
-            if (ActivityCompat.checkSelfPermission(ctx, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                Log.d(TAG, "Bluetooth controller doesn't have permission");
-                return false;
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S){
+                if (ActivityCompat.checkSelfPermission(ctx, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                    // TODO: Consider calling
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
+                    if(ActivityCompat.shouldShowRequestPermissionRationale((Activity) ctx, Manifest.permission.BLUETOOTH_CONNECT)){
+
+                    }else {
+                        ActivityCompat.requestPermissions((Activity) ctx,new String[] {Manifest.permission.BLUETOOTH_CONNECT}, 0);
+
+                    }
+                    Log.d(TAG, "Bluetooth controller doesn't have permission");
+
+                }
             }
             bluetoothGatt = device.connectGatt(ctx, false, bluetoothGattCallback);
             Log.d(TAG, "Connection successful");
-            return true;
+
         } catch (IllegalArgumentException exception) {
             Log.d(TAG, "Device not found with provided address.  Unable to connect.");
-            return false;
+
         }
     }
 
