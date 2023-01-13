@@ -74,19 +74,24 @@ export default function Bt_status({route}: StatusScreenProps) {
     [peripheralId],
   );
 
+  /**
+   *
+   */
   const getPressureStatus = React.useCallback(() => {
-    console.log('Getting bladder pressure...');
-    try {
-      const length = 0x01;
-      const startCmd = 0x24;
-      const cmdSansCrc = cmdIdentifier.concat([length, startCmd]);
-      const crc = parseInt(calculateCRC(cmdSansCrc), 16);
-      const cmd = cmdSansCrc.concat(crc);
+    setTimeout(() => {
+      console.log('Getting bladder pressure...');
+      try {
+        const length = 0x01;
+        const startCmd = 0x24;
+        const cmdSansCrc = cmdIdentifier.concat([length, startCmd]);
+        const crc = parseInt(calculateCRC(cmdSansCrc), 16);
+        const cmd = cmdSansCrc.concat(crc);
 
-      write(cmd);
-    } catch (e) {
-      database().ref('/write').push({e, info: 'getPressureStatus failed.'});
-    }
+        write(cmd);
+      } catch (e) {
+        database().ref('/write').push({e, info: 'getPressureStatus failed.'});
+      }
+    }, 500);
   }, [write]);
 
   React.useEffect(() => {
@@ -403,7 +408,6 @@ export default function Bt_status({route}: StatusScreenProps) {
   /**
    *
    */
-
   function calculateCRC(data: number[]) {
     let crc = 0;
 
