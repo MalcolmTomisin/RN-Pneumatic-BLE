@@ -144,6 +144,9 @@ public class BluetoothController implements Control {
     @Override
     public boolean isConnected(final String PERIPHERAL_ID) {
         if (bluetoothAdapter != null && bluetoothGatt != null){
+            if(device == null){
+                device = bluetoothAdapter.getRemoteDevice(PERIPHERAL_ID);
+            }
             return BluetoothGatt.STATE_CONNECTED == bluetoothGatt.getConnectionState(device);
         }
         return connected;
