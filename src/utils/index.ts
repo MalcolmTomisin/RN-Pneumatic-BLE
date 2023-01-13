@@ -158,23 +158,3 @@ export const queryClient = new QueryClient({
     },
   },
 });
-
-const createNativePersister = (key: string): Persister => {
-  const store = getPersistedQueryStorage(storage);
-
-  return {
-    persistClient: persistClient => store.setItem(key, persistClient),
-    removeClient: () => store.removeItem(key),
-    restoreClient: () => store.getItem(key),
-  };
-};
-
-export function ApiProvider({children}: {children: React.ReactNode}) {
-  const persister = createNativePersister('PERSIST_NATIVE');
-
-  return(
-    <PersistQueryClientProvider client={queryClient} persistOptions={{persister}}>
-
-    </PersistQueryClientProvider>
-  )
-};
