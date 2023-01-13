@@ -34,6 +34,13 @@ import {storage, PERSISTENCE_KEY, PERIPHERAL_KEY} from 'src/utils';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 var SharedPreferences = require('react-native-shared-preferences');
 import codePush from 'react-native-code-push';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query';
 
 const Service: {
   launchService: (arg: string) => void;
@@ -49,6 +56,8 @@ export const PeripheralContext = React.createContext<PeripherContextProps>({
   peripheralValue: '',
   setPeripheralValue: () => {},
 });
+
+const queryClient = new QueryClient();
 
 const App = () => {
   const isDarkMode = useColorScheme() === 'dark';
