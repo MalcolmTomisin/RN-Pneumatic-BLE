@@ -119,14 +119,12 @@ public class CompositeBluetoothService extends HeadlessJsTaskService {
             e.printStackTrace();
         }
         if(isPeripheralConnected){
-            HandlerThread handlerThread = new HandlerThread("mHandlerThread");
-            handlerThread.start();
-            Handler handler = new Handler(handlerThread.getLooper());
-            Runnable task = () -> {
-                // Perform the task here
-                controller.increasePressure();
-            };
-            handler.postDelayed(task, 600);
+            try {
+                Thread.sleep(600);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            controller.increasePressure();
         }
     }
 
