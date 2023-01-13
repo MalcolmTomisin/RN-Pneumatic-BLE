@@ -1,30 +1,24 @@
+import React from 'react';
 import {MMKV} from 'react-native-mmkv';
 import {Buffer} from '@craftzdog/react-native-buffer';
-import {stringify as uuidStringify} from 'uuid';
+import {
+  PersistedClient,
+  Promisable,
+  Persister,
+  PersistQueryClientProvider,
+} from '@tanstack/react-query-persist-client';
+import {AppStateStatus} from 'react-native';
+import {QueryClient} from '@tanstack/react-query';
+
+type QueryStorage = {
+  getItem: (key: string) => Promisable<PersistedClient | undefined>;
+  removeItem: (key: string) => Promisable<void>;
+  setItem: (key: string, value: PersistedClient) => Promisable<void>;
+};
 
 export const storage = new MMKV();
 export const PERSISTENCE_KEY = 'NAVIGATION_STATE';
 export const PERIPHERAL_KEY = 'KEY12345';
-
-function isHex(h: string) {
-  var a = parseInt(h, 16);
-  console.log('string  ===>', a.toString(16));
-  return a.toString(16) === h.toLowerCase();
-}
-
-export const hexToUUID = (hexString: string): string => {
-  const hexNumber = 0xfff0;
-  const parsedHexString = hexString.replace(new RegExp('^0x'), '');
-  if (!isHex(parsedHexString)) {
-    throw new Error('hexString is not valid hexadecimal number');
-  }
-  let hexBuffer = Buffer.from(parsedHexString, 'hex');
-  console.log('buffer', hexBuffer.buffer);
-  const uuidResultBuffer = uuidStringify([hexNumber]);
-
-  //Create uuid utf8 string representation
-  return uuidResultBuffer.toString('utf8');
-};
 
 // Function to parse the data packet
 export function parseDataPacket(data: Buffer) {
@@ -140,3 +134,47 @@ export function buildStartCommandPacket(
 
   return packetView.buffer;
 }
+
+export const getPersistedQueryStorage = (mmkv: MMKV) => {
+  const persistStorage: QueryStorage = {
+    getItem: name => {
+      const value = mmkv.getString(name);
+      return value ? (JSON.parse(value) as PersistedClient) : undefined;
+    },
+    removeItem: name => mmkv.delete(name),
+    setItem: (name, value) => mmkv.set(name, JSON.stringify(value)),
+  };
+
+  return persistStorage;
+};
+
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      cacheTime: Infinity,
+      refetchOnReconnect: 'always',
+      retry: 3,
+      suspense: false,
+    },
+  },
+});
+
+const createNativePersister = (key: string): Persister => {
+  const store = getPersistedQueryStorage(storage);
+
+  return {
+    persistClient: persistClient => store.setItem(key, persistClient),
+    removeClient: () => store.removeItem(key),
+    restoreClient: () => store.getItem(key),
+  };
+};
+
+export function ApiProvider({children}: {children: React.ReactNode}) {
+  const persister = createNativePersister('PERSIST_NATIVE');
+
+  return(
+    <PersistQueryClientProvider client={queryClient} persistOptions={{persister}}>
+
+    </PersistQueryClientProvider>
+  )
+};
