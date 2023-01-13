@@ -33,7 +33,6 @@ import com.facebook.react.HeadlessJsTaskService;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CompositeBluetoothService extends HeadlessJsTaskService {
     private String PERIPHERAL_ID = null;
@@ -70,7 +69,6 @@ public class CompositeBluetoothService extends HeadlessJsTaskService {
 
         if(PERIPHERAL_ID == null){
             PERIPHERAL_ID = Utils.fetchMacAddress(this);
-            controller.connect(PERIPHERAL_ID, this);
         }
 
         controller.init(new ConnectListener() {
@@ -108,24 +106,22 @@ public class CompositeBluetoothService extends HeadlessJsTaskService {
                 }
             }
         });
-        AtomicBoolean isPeripheralConnected = new AtomicBoolean(false);
-        Handler btHandler = new Handler();
-        Runnable checkBT = () -> {
-            isPeripheralConnected.set(PERIPHERAL_ID != null && controller.isConnected(PERIPHERAL_ID));
-            if(PERIPHERAL_ID != null && !isPeripheralConnected.get()){
-                Log.d(Utils.TAG, "Controller disconnected");
-                isPeripheralConnected.set(controller.isConnected(PERIPHERAL_ID));
-                if (!isPeripheralConnected.get()){
-                    Log.d(Utils.TAG, "Unable to connect to peripheral");
-                }
-            }
-            Log.d(Utils.TAG, isPeripheralConnected.get() ? "Connected to peripheral" : "Peripheral not connected");
-        };
 
-        btHandler.postDelayed(checkBT, 300);
-        if(isPeripheralConnected.get()){
-            Handler handler = new Handler();
-
+        boolean isPeripheralConnected = PERIPHERAL_ID != null && controller.isConnected(PERIPHERAL_ID);
+        if(PERIPHERAL_ID != null && !isPeripheralConnected){
+            Log.d(Utils.TAG, "Controller disconnected");
+            controller.connect(PERIPHERAL_ID, this);
+        }
+        Log.d(Utils.TAG, isPeripheralConnected ? "Connected to peripheral" : "Peripheral not connected");
+        try {
+            Thread.sleep(600);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        if(isPeripheralConnected){
+            HandlerThread handlerThread = new HandlerThread("mHandlerThread");
+            handlerThread.start();
+            Handler handler = new Handler(handlerThread.getLooper());
             Runnable task = () -> {
                 // Perform the task here
                 controller.increasePressure();
