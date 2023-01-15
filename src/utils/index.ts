@@ -1,13 +1,9 @@
-import React from 'react';
 import {MMKV} from 'react-native-mmkv';
 import {Buffer} from '@craftzdog/react-native-buffer';
 import {
   PersistedClient,
   Promisable,
-  Persister,
-  PersistQueryClientProvider,
 } from '@tanstack/react-query-persist-client';
-import {AppStateStatus} from 'react-native';
 import {QueryClient} from '@tanstack/react-query';
 
 type QueryStorage = {
