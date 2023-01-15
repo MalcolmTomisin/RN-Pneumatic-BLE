@@ -9,10 +9,29 @@ import {
 import styles from '../../styles';
 import {TextInput, Button} from 'src/components';
 import type {LoginScreenProps} from 'src/navigators/onboarding/types';
+import {useMutation} from '@tanstack/react-query';
+import {axiosInstance} from 'src/network';
+import {useAppAuth} from 'src/store';
 
 export default function Login({navigation}: LoginScreenProps) {
   const darkMode = useColorScheme() === 'dark';
+  const [textInput, setTextInput] = useState<{email: string; password: string}>(
+    {email: '', password: ''},
+  );
   const [secure, setSecure] = useState<boolean>(true);
+  const {setSignIn, setToken} = useAppAuth(state => state);
+  const signIn = useMutation(
+    () =>
+      axiosInstance.post('/api/sign-in', {
+        email: textInput.email,
+        password: textInput.password,
+      }),
+    {
+      onSuccess: () => {
+        //#TODO plug in auth token
+      },
+    },
+  );
   return (
     <View style={styles.container}>
       <StatusBar
@@ -29,6 +48,10 @@ export default function Login({navigation}: LoginScreenProps) {
         placeholderTextColor={appColors.placeholder_grey}
         label="Email Address"
         placeholder="Enter Email Address"
+        value={textInput.email}
+        onChangeText={(text: string) => {
+          setTextInput(s => ({...s, email: text}));
+        }}
       />
       <TextInput
         isPassword
@@ -39,6 +62,10 @@ export default function Login({navigation}: LoginScreenProps) {
           setSecure(!secure);
         }}
         label="Password"
+        onChangeText={(text: string) => {
+          setTextInput(s => ({...s, password: text}));
+        }}
+        value={textInput.password}
       />
       <Text style={styles.lowerText}>
         By signing in, I accept the{' '}
