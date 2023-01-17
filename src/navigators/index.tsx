@@ -14,6 +14,9 @@ const Stack = createNativeStackNavigator<RootStackParams>();
 
 export default function AppNavigator() {
   const isSignedIn = useAppAuth(state => state.isSignedIn);
+
+  console.log(`isSignedIn: ${isSignedIn}`);
+
   return (
     // #TODO wire up global state to handle authentication
     <Stack.Navigator
@@ -24,7 +27,6 @@ export default function AppNavigator() {
         <Stack.Screen name={appRoutes.ONBOARD} component={Onboard} />
       ) : (
         <>
-          <Stack.Screen name={appRoutes.ONBOARD} component={Onboard} />
           <Stack.Screen name={appRoutes.DASHBOARD} component={Dashboard} />
         </>
       )}
