@@ -32,8 +32,9 @@ import {
 import {MMKV} from 'react-native-mmkv';
 import {storage, PERSISTENCE_KEY, PERIPHERAL_KEY} from 'src/utils';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
-var SharedPreferences = require('react-native-shared-preferences');
 import codePush from 'react-native-code-push';
+import {ApiProvider} from 'src/components';
+import {useAppAuth} from 'src/store';
 
 const Service: {
   launchService: (arg: string) => void;
@@ -57,6 +58,7 @@ const App = () => {
   const theme = isDarkMode ? CombinedDarkTheme : CombinedDefaultTheme;
   const appState = React.useRef(AppState.currentState);
   const [peripheralValue, setPeripheralValue] = React.useState<string>('');
+  const hydrateState = useAppAuth(state => state.hydrateState);
 
   const handleStateChange = (state?: NavigationState) => {
     if (state) {
@@ -79,21 +81,32 @@ const App = () => {
     console.log('peripheralValue -> ', peripheralValue);
 
     const subscription = AppState.addEventListener('change', nextAppState => {
-      if (appState.current === 'active' && nextAppState !== 'active') {
+      if (
+        appState.current === 'active' &&
+        nextAppState.match(/inactive|background/)
+      ) {
         appState.current = nextAppState;
         //call background service
+        storage.set('APP_AUTH', JSON.stringify(useAppAuth.getState()));
         if (peripheralValue) {
           console.log('Service running...');
-          InteractionManager.runAfterInteractions(() => {
-            SharedPreferences.setItem(PERIPHERAL_KEY, peripheralValue);
-          });
           Service.launchService(peripheralValue);
         }
       }
     });
 
+    const subscription2 = AppState.addEventListener('change', nextAppState => {
+      if (
+        !appState.current.match(/inactive|background/) &&
+        nextAppState === 'active'
+      ) {
+        appState.current = nextAppState;
+      }
+    });
+
     return () => {
       subscription.remove();
+      subscription2.remove();
     };
   }, [peripheralValue]);
 
@@ -105,13 +118,22 @@ const App = () => {
       ) {
         appState.current = nextState;
         Service.closeService();
+        const stringifiedState = storage.getString('APP_AUTH');
+        const persistedState:
+          | {isSignedIn: boolean; token?: string}
+          | undefined = stringifiedState
+          ? JSON.parse(stringifiedState)
+          : undefined;
+        if (persistedState) {
+          hydrateState(persistedState);
+        }
       }
     });
 
     return () => {
       subscription.remove();
     };
-  }, []);
+  }, [hydrateState]);
 
   const restoreState = React.useCallback(async (mmkv: MMKV) => {
     try {
@@ -147,10 +169,12 @@ const App = () => {
           initialState={initialState}
           onStateChange={handleStateChange}
           theme={theme}>
-          <PeripheralContext.Provider
-            value={{peripheralValue, setPeripheralValue}}>
-            <AppNavigator />
-          </PeripheralContext.Provider>
+          <ApiProvider>
+            <PeripheralContext.Provider
+              value={{peripheralValue, setPeripheralValue}}>
+              <AppNavigator />
+            </PeripheralContext.Provider>
+          </ApiProvider>
         </NavigationContainer>
       </PaperProvider>
     </GestureHandlerRootView>
