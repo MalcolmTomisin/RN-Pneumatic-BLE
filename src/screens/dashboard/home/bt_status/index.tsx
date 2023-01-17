@@ -18,6 +18,7 @@ import database from '@react-native-firebase/database';
 import {Buffer} from '@craftzdog/react-native-buffer';
 import {parseDataPacket} from 'src/utils';
 import {PeripheralContext} from 'App';
+import {useAppAuth} from 'src/store';
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
@@ -46,6 +47,10 @@ export default function Bt_status({route}: StatusScreenProps) {
   const targetPressure = React.useRef(0);
   const {peripheralValue, setPeripheralValue} =
     React.useContext(PeripheralContext);
+  const {profile, hardware} = useAppAuth(state => ({
+    profile: state.profile,
+    hardware: state.hardware,
+  }));
 
   /**
    *
@@ -190,15 +195,24 @@ export default function Bt_status({route}: StatusScreenProps) {
 
               setHardwarePressure(parsedData.para);
 
-              database().ref('/results').push({
-                macAddress: currentPeripheral,
-                deviceName: peripheral.name,
-                key: 'Pressure',
-                value: parsedData.para,
-                dateTimeAcquired: Date.now(),
-                parsedData: parsedData,
-                rawData: value,
-              });
+              // const profileId = '8HvXYizoxBXv5BfZN'; // TODO: This is temporary
+              // const hardwareId = 'gTqqYrPmx9jsE6Mub'; // TODO: This is temporary
+
+              console.log(`Saving data to: /${profile?._id}-${hardware?._id}`);
+
+              database()
+                .ref(`/${profile?._id}-${hardware?._id}`)
+                .set({
+                  [Date.now()]: {
+                    macAddress: currentPeripheral,
+                    deviceName: peripheral.name,
+                    key: 'Pressure',
+                    value: parsedData.para,
+                    dateTimeAcquired: Date.now(),
+                    parsedData: parsedData,
+                    rawData: value,
+                  },
+                });
 
               console.log(
                 `currentPressure: ${parsedData.para}, targetPressure: ${targetPressure.current}`,

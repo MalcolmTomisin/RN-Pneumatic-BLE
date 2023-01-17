@@ -1,7 +1,7 @@
 import {z} from 'zod';
 
 const HardwareSchema = z.object({
-  _id: z.string().uuid(),
+  _id: z.string(),
   type: z.string(),
   description: z.string(),
   macAddress: z.string(),
