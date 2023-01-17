@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import React from 'react';
 
 import {
@@ -41,6 +42,7 @@ export default function Bt_status({route}: StatusScreenProps) {
   const [batterStatus, setBatterStatus] = React.useState(0);
   const [sliderPressure, setSliderPressure] = React.useState(0);
   const [hardwarePressure, setHardwarePressure] = React.useState(0);
+  const [macAddress, setMacAddress] = React.useState('');
   const targetPressure = React.useRef(0);
   const {peripheralValue, setPeripheralValue} =
     React.useContext(PeripheralContext);
@@ -125,6 +127,7 @@ export default function Bt_status({route}: StatusScreenProps) {
                 buffer: buffer.toJSON(),
                 bytes: buffer.toString('utf8'),
               });
+            setMacAddress(currentPeripheral);
 
             // if (!(parsedData.cmdCode === 3 && batteryStatusDisplayed.current)) {
             //   console.log('Displayed to mobile screen.');
@@ -598,8 +601,17 @@ export default function Bt_status({route}: StatusScreenProps) {
             </Text>
           </TouchableOpacity>
         </View>
+        <Text
+          style={{
+            fontSize: normalize(16),
+            lineHeight: normalize(16 * 1.5),
+            fontFamily: appFonts.BARLOW_BD,
+            color: appColors.black,
+          }}>
+          MAC Address: {macAddress}
+        </Text>
       </View>
-      <TouchableOpacity
+      {/* <TouchableOpacity
         onPress={() => stopInflation()}
         style={{
           borderRadius: normalize(48),
@@ -619,7 +631,7 @@ export default function Bt_status({route}: StatusScreenProps) {
           }}>
           TEST: STOP
         </Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 }
