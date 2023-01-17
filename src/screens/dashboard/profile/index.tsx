@@ -26,7 +26,7 @@ import type {ProfileScreenProps} from 'src/navigators/dashboard/profile/types';
 import {useAppAuth} from 'src/store';
 import {useUserDetails} from 'src/network/hooks';
 
-const Information = ({navigation}) => (
+const Information = ({navigation, first_name, last_name, email}) => (
   <View>
     <View style={styles.card}>
       <View
@@ -39,7 +39,11 @@ const Information = ({navigation}) => (
           label="BB"
           size={48}
         />
-        <Text style={[styles.bold_color, styles.bold_title]}>Bruce Banner</Text>
+        <Text
+          style={[
+            styles.bold_color,
+            styles.bold_title,
+          ]}>{`${first_name} ${last_name}`}</Text>
       </View>
       <View style={[styles.row, styles.space_24]}>
         <View style={[{flex: 1}]}>
@@ -58,11 +62,13 @@ const Information = ({navigation}) => (
       <View style={[styles.row, styles.space_24]}>
         <View style={[{flex: 1}]}>
           <Text style={[styles.pale_info]}>First Name</Text>
-          <Text style={[styles.bold_color, styles.bold_info]}>Bruce</Text>
+          <Text style={[styles.bold_color, styles.bold_info]}>
+            {first_name}
+          </Text>
         </View>
         <View style={[{flex: 1}]}>
           <Text style={[styles.pale_info]}>Last Name</Text>
-          <Text style={[styles.bold_color, styles.bold_info]}>Banner</Text>
+          <Text style={[styles.bold_color, styles.bold_info]}>{last_name}</Text>
         </View>
       </View>
       <View style={[styles.row, styles.space_24]}>
@@ -77,9 +83,7 @@ const Information = ({navigation}) => (
       </View>
       <View style={[styles.space_24]}>
         <Text style={[styles.pale_info]}>Email</Text>
-        <Text style={[styles.bold_color, styles.bold_info]}>
-          BruceB@mail.com
-        </Text>
+        <Text style={[styles.bold_color, styles.bold_info]}>{email}</Text>
       </View>
       <View style={[styles.space_24]}>
         <Text style={[styles.pale_info]}>Phone</Text>
@@ -132,7 +136,6 @@ const ActivityList = () => {
   const info = new Array(5).fill('Bruce Banner');
   const [selectedItem, setSelectedItem] = useState('Most Recent');
   const darkMode = useColorScheme() === 'dark';
-
 
   const _renderItem = ({item}) => (
     <View style={[styles.row]}>
@@ -200,12 +203,21 @@ const ActivityList = () => {
 
 export default function Profile({navigation}: ProfileScreenProps) {
   const layout = useWindowDimensions();
-  const {data, isLoading} = useUserDetails();
+  const {firstName, lastName, userEmail} = useAppAuth(
+    state => state.profile ?? {firstName: '', lastName: '', userEmail: ''},
+  );
 
   const renderScene = ({route}) => {
     switch (route.key) {
       case 'first':
-        return <Information navigation={navigation} />;
+        return (
+          <Information
+            first_name={firstName}
+            last_name={lastName}
+            email={userEmail}
+            navigation={navigation}
+          />
+        );
       case 'second':
         return <ActivityList />;
       default:

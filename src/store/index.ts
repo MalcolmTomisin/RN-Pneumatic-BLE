@@ -1,4 +1,5 @@
 import {create} from 'zustand';
+import type {HardwareType, ProfileType} from 'src/schemas';
 
 interface AuthState {
   isSignedIn: boolean;
@@ -6,6 +7,10 @@ interface AuthState {
   setSignIn: (arg: boolean) => void;
   setToken: (arg: string) => void;
   hydrateState: (arg: {isSignedIn: boolean; token?: string}) => void;
+  hardware?: HardwareType;
+  profile?: ProfileType;
+  setHardware: (arg: HardwareType) => void;
+  setProfile: (arg: ProfileType) => void;
 }
 
 export const useAppAuth = create<AuthState>(set => ({
@@ -16,4 +21,6 @@ export const useAppAuth = create<AuthState>(set => ({
   setToken: (token: string) => set(state => ({...state, token})),
   hydrateState: (persistedState: {isSignedIn: boolean; token?: string}) =>
     set(state => ({...state, ...persistedState})),
+  setHardware: (h: HardwareType) => set(state => ({...state, hardware: h})),
+  setProfile: (h: ProfileType) => set(state => ({...state, profile: h})),
 }));
