@@ -5,6 +5,7 @@ import {
   Promisable,
 } from '@tanstack/react-query-persist-client';
 import {QueryClient} from '@tanstack/react-query';
+import {Platform, ToastAndroid} from 'react-native';
 
 type QueryStorage = {
   getItem: (key: string) => Promisable<PersistedClient | undefined>;
@@ -154,3 +155,9 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+export const showToast = (text: string) => {
+  if (Platform.OS === 'android') {
+    ToastAndroid.showWithGravity(text, ToastAndroid.SHORT, ToastAndroid.BOTTOM);
+  }
+};

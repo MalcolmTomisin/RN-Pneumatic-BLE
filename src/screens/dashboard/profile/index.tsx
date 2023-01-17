@@ -10,7 +10,7 @@ import {
   useColorScheme,
 } from 'react-native';
 import {TabView, TabBar} from 'react-native-tab-view';
-import {Avatar, Switch} from 'react-native-paper';
+import {Avatar} from 'react-native-paper';
 import {
   appFonts,
   normalize,
@@ -19,11 +19,12 @@ import {
   CombinedDarkTheme,
   CombinedDefaultTheme,
 } from 'src/config';
-import ic_edit from 'assets/images/ic_edit.png';
 import ic_shield from 'assets/images/ic_shield.png';
 import {Picker} from '@react-native-picker/picker';
 import {FlatList} from 'react-native-gesture-handler';
 import type {ProfileScreenProps} from 'src/navigators/dashboard/profile/types';
+import {useAppAuth} from 'src/store';
+import {useUserDetails} from 'src/network/hooks';
 
 const Information = ({navigation}) => (
   <View>
@@ -132,6 +133,7 @@ const ActivityList = () => {
   const [selectedItem, setSelectedItem] = useState('Most Recent');
   const darkMode = useColorScheme() === 'dark';
 
+
   const _renderItem = ({item}) => (
     <View style={[styles.row]}>
       <View style={{alignItems: 'center'}}>
@@ -198,6 +200,7 @@ const ActivityList = () => {
 
 export default function Profile({navigation}: ProfileScreenProps) {
   const layout = useWindowDimensions();
+  const {data, isLoading} = useUserDetails();
 
   const renderScene = ({route}) => {
     switch (route.key) {

@@ -2,8 +2,9 @@ import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {appRoutes} from 'src/config';
 import {Home, Scan, DevicesList, Bt_status} from 'src/screens/dashboard';
+import type {DeviceStackParams} from './types';
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<DeviceStackParams>();
 
 export default function DeviceStack() {
   return (
