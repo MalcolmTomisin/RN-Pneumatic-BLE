@@ -12,6 +12,9 @@ import type {LoginScreenProps} from 'src/navigators/onboarding/types';
 import {useMutation} from '@tanstack/react-query';
 import {axiosInstance} from 'src/network';
 import {useAppAuth} from 'src/store';
+import type {LoginResponseType} from 'src/schemas';
+import {LoginResponseSchema} from 'src/schemas';
+import {AxiosResponse} from 'axios';
 
 export default function Login({navigation}: LoginScreenProps) {
   const darkMode = useColorScheme() === 'dark';
@@ -19,16 +22,31 @@ export default function Login({navigation}: LoginScreenProps) {
     {email: '', password: ''},
   );
   const [secure, setSecure] = useState<boolean>(true);
-  const {setSignIn, setToken} = useAppAuth(state => state);
+  const {setSignIn, setToken, setHardware, setProfile} = useAppAuth(
+    state => state,
+  );
   const signIn = useMutation(
     () =>
-      axiosInstance.post('/api/sign-in', {
-        email: textInput.email,
-        password: textInput.password,
-      }),
+      axiosInstance.post<LoginResponseType, AxiosResponse<LoginResponseType>>(
+        '/api/sign-in',
+        {
+          email: textInput.email,
+          password: textInput.password,
+        },
+      ),
     {
-      onSuccess: () => {
+      onSuccess: ({data}) => {
         //#TODO plug in auth token
+        try {
+          const response = LoginResponseSchema.parse(data);
+          const {profile, hardware, token} = response.data;
+          setProfile(profile);
+          setHardware(hardware);
+          setToken(token);
+          setSignIn(true);
+        } catch (e) {
+          console.log(e);
+        }
       },
     },
   );
@@ -72,12 +90,7 @@ export default function Login({navigation}: LoginScreenProps) {
         <Text style={styles.terms}>Terms & Conditions and Privacy Policy</Text>
         of Smart Brace Technology by Spinal Technology
       </Text>
-      <Button
-        onPress={() => {
-          // navigation.navigate(appRoutes.AUTH);
-          navigation.navigate(appRoutes.DASHBOARD);
-        }}
-        style={styles.btn}>
+      <Button onPress={signIn.mutate} style={styles.btn}>
         Log In
       </Button>
       <Text
