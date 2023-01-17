@@ -28,6 +28,7 @@ module.exports = api => {
     ],
     // ['module:react-native-dotenv'],
     ['react-native-paper/babel'],
+    ['module:react-native-dotenv'],
   ];
   //change to 'production' to check if this is working in 'development' mode
   if (babelEnv !== 'development') {

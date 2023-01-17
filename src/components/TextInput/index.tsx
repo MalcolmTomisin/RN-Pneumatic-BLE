@@ -24,7 +24,7 @@ export default forwardRef<
     isPassword?: boolean;
     containerStyle?: StyleProp<ViewStyle>;
     rightIcon?: React.ReactNode;
-    toggleSecure?:() => void;
+    toggleSecure?: () => void;
   }
 >(function Input(props, ref) {
   const [focused, setFocused] = useState<boolean>(false);
