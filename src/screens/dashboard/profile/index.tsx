@@ -71,7 +71,7 @@ const Information = ({navigation, first_name, last_name, email}) => (
           <Text style={[styles.bold_color, styles.bold_info]}>{last_name}</Text>
         </View>
       </View>
-      <View style={[styles.row, styles.space_24]}>
+      {/* <View style={[styles.row, styles.space_24]}>
         <View style={[{flex: 1}]}>
           <Text style={[styles.pale_info]}>Date of Birth</Text>
           <Text style={[styles.bold_color, styles.bold_info]}>12/11/22</Text>
@@ -80,17 +80,17 @@ const Information = ({navigation, first_name, last_name, email}) => (
           <Text style={[styles.pale_info]}>Date of Amputation</Text>
           <Text style={[styles.bold_color, styles.bold_info]}>12/11/22</Text>
         </View>
-      </View>
+      </View> */}
       <View style={[styles.space_24]}>
         <Text style={[styles.pale_info]}>Email</Text>
         <Text style={[styles.bold_color, styles.bold_info]}>{email}</Text>
       </View>
-      <View style={[styles.space_24]}>
+      {/* <View style={[styles.space_24]}>
         <Text style={[styles.pale_info]}>Phone</Text>
         <Text style={[styles.bold_color, styles.bold_info]}>
           (544) 856-1196
         </Text>
-      </View>
+      </View> */}
     </View>
     <View
       style={[
