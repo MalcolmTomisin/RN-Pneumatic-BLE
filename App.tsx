@@ -41,24 +41,16 @@ const Service: {
   closeService: () => void;
 } = NativeModules.BluetoothServiceLauncher;
 
-interface PeripherContextProps {
-  peripheralValue: string;
-  setPeripheralValue: React.Dispatch<React.SetStateAction<string>>;
-}
-
-export const PeripheralContext = React.createContext<PeripherContextProps>({
-  peripheralValue: '',
-  setPeripheralValue: () => {},
-});
-
 const App = () => {
   const isDarkMode = useColorScheme() === 'dark';
   const [isReady, setIsReady] = React.useState(__DEV__ ? true : false);
   const [initialState, setInitialState] = React.useState();
   const theme = isDarkMode ? CombinedDarkTheme : CombinedDefaultTheme;
   const appState = React.useRef(AppState.currentState);
-  const [peripheralValue, setPeripheralValue] = React.useState<string>('');
-  const hydrateState = useAppAuth(state => state.hydrateState);
+  const {hydrateState, peripheralValue} = useAppAuth(state => ({
+    hydrateState: state.hydrateState,
+    peripheralValue: state.peripheralAddress,
+  }));
 
   const handleStateChange = (state?: NavigationState) => {
     if (state) {
@@ -160,10 +152,7 @@ const App = () => {
           onStateChange={handleStateChange}
           theme={theme}>
           <ApiProvider>
-            <PeripheralContext.Provider
-              value={{peripheralValue, setPeripheralValue}}>
-              <AppNavigator />
-            </PeripheralContext.Provider>
+            <AppNavigator />
           </ApiProvider>
         </NavigationContainer>
       </PaperProvider>

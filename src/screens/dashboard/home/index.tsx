@@ -27,7 +27,6 @@ import {
 } from 'react-native-permissions';
 
 export default function Home({navigation}: DeviceScreenProps) {
-  const [disabled] = React.useState(true);
   const darkMode = useColorScheme() === 'dark';
   const isLessThanVersion12 = Platform.Version >= 23 && Platform.Version <= 30;
 
@@ -153,16 +152,16 @@ export default function Home({navigation}: DeviceScreenProps) {
           mode="outlined"
           onPress={checkPermissions}
           labelStyle={{color: appColors.blueprimary}}>
-          Scan
+          Proceed to Scan
         </Button>
-        <Button
+        {/* <Button
           style={{
             backgroundColor: disabled
               ? appColors.disabled_grey
               : appColors.blueprimary,
           }}>
           Connect
-        </Button>
+        </Button> */}
       </View>
     </View>
   );
