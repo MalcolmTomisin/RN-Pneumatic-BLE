@@ -94,11 +94,11 @@ export default function Login({navigation}: LoginScreenProps) {
         }}
         value={textInput.password}
       />
-      <Text style={styles.lowerText}>
+      {/* <Text style={styles.lowerText}>
         By signing in, I accept the{' '}
         <Text style={styles.terms}>Terms & Conditions and Privacy Policy</Text>
         of Smart Brace Technology by Spinal Technology
-      </Text>
+      </Text> */}
       <Button
         loading={signIn.isLoading}
         onPress={signIn.mutate}
