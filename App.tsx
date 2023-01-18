@@ -94,10 +94,7 @@ const App = () => {
 
   React.useEffect(() => {
     const subscription = AppState.addEventListener('change', nextState => {
-      if (
-        appState.current.match(/inactive|background/) &&
-        nextState === 'active'
-      ) {
+      if (nextState === 'active') {
         appState.current = nextState;
         Service.closeService();
         const stringifiedState = storage.getString('APP_AUTH');
@@ -106,6 +103,7 @@ const App = () => {
           | undefined = stringifiedState
           ? JSON.parse(stringifiedState)
           : undefined;
+
         if (persistedState) {
           hydrateState(persistedState);
         }
