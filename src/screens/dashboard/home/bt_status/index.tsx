@@ -227,7 +227,7 @@ export default function Bt_status({route}: StatusScreenProps) {
                 );
 
                 database()
-                  .ref(`/${profile?._id}-${hardware?._id}`)
+                  .ref(`/${profile?._id}::${hardware?._id}`)
                   .set({
                     [Date.now()]: {
                       macAddress: currentPeripheral,
