@@ -7,11 +7,15 @@ import exit from 'assets/images/exit.png';
 import compass from 'assets/images/compass.png';
 import DeviceStack from './connect';
 import ProfileStack from './profile';
+import {emptyPersistedState} from 'src/utils';
+import {useAppAuth} from 'src/store';
 
 const Drawer = createDrawerNavigator();
 const Logout = () => <View />;
 
 export default function DashboardStack() {
+  const setEmptyState = useAppAuth(state => state.setEmptyState);
+
   return (
     <Drawer.Navigator
       screenOptions={{
@@ -127,7 +131,8 @@ export default function DashboardStack() {
         listeners={({navigation}) => ({
           drawerItemPress: e => {
             e.preventDefault();
-            navigation.navigate(appRoutes.ONBOARD);
+            setEmptyState();
+            emptyPersistedState();
           },
         })}
       />

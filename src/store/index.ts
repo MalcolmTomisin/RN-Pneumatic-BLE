@@ -11,7 +11,15 @@ interface AuthState {
   profile?: ProfileType;
   setHardware: (arg: HardwareType) => void;
   setProfile: (arg: ProfileType) => void;
+  setEmptyState: () => void;
 }
+
+const initialState = {
+  isSignedIn: false,
+  token: '',
+  hardware: undefined,
+  profile: undefined,
+};
 
 export const useAppAuth = create<AuthState>(set => ({
   isSignedIn: false,
@@ -23,4 +31,5 @@ export const useAppAuth = create<AuthState>(set => ({
     set(state => ({...state, ...persistedState})),
   setHardware: (h: HardwareType) => set(state => ({...state, hardware: h})),
   setProfile: (h: ProfileType) => set(state => ({...state, profile: h})),
+  setEmptyState: () => set(state => ({...state, ...initialState})),
 }));

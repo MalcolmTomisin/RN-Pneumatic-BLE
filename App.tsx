@@ -95,18 +95,8 @@ const App = () => {
       }
     });
 
-    const subscription2 = AppState.addEventListener('change', nextAppState => {
-      if (
-        !appState.current.match(/inactive|background/) &&
-        nextAppState === 'active'
-      ) {
-        appState.current = nextAppState;
-      }
-    });
-
     return () => {
       subscription.remove();
-      subscription2.remove();
     };
   }, [peripheralValue]);
 
