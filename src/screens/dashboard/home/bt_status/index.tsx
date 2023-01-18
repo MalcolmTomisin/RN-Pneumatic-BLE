@@ -16,7 +16,7 @@ import {StatusScreenProps} from 'src/navigators/dashboard/connect/types';
 import BleManager from 'react-native-ble-manager';
 import database from '@react-native-firebase/database';
 import {Buffer} from '@craftzdog/react-native-buffer';
-import {parseDataPacket} from 'src/utils';
+import {parseDataPacket, showToast} from 'src/utils';
 import {useAppAuth} from 'src/store';
 
 const BleManagerModule = NativeModules.BleManager;
@@ -49,7 +49,28 @@ export default function Bt_status({route}: StatusScreenProps) {
     hardware: state.hardware,
     setPeripheralValue: state.setPeripheralAddress,
   }));
+  const [connected, setConnected] = React.useState<boolean>(false);
 
+  React.useLayoutEffect(() => {
+    (async () => {
+      const isConnected = await BleManager.isPeripheralConnected(
+        peripheralId,
+        [],
+      );
+      if (!isConnected) {
+        BleManager.connect(peripheralId)
+          .then(() => {
+            showToast('Connected');
+            setConnected(true);
+          })
+          .catch(() => {
+            showToast('Not connected');
+          });
+      } else {
+        setConnected(true);
+      }
+    })();
+  }, [peripheralId]);
   /**
    *
    * @param cmd
@@ -101,144 +122,151 @@ export default function Bt_status({route}: StatusScreenProps) {
 
   React.useEffect(() => {
     let bleListener: EmitterSubscription;
-    (async () => {
-      const peripheral = await BleManager.retrieveServices(peripheralId);
-      database().ref('/peripherals').push(peripheral);
-      await BleManager.startNotification(
-        peripheralId,
-        uuid,
-        characteristic_uuid,
-      );
-      //setPeripheralValue(peripheralId);
-      bleListener = bleManagerEmitter.addListener(
-        'BleManagerDidUpdateValueForCharacteristic',
-        ({value, peripheral: currentPeripheral, characteristic, service}) => {
-          // Convert bytes array to string
-          try {
-            //const data = bytesToString(value);
-            const buffer = Buffer.from(value);
-            const parsedData = parseDataPacket(buffer);
-
-            database()
-              .ref('/debug' + Date.now())
-              .set({
-                parsedData,
-                peripheral: currentPeripheral,
-                characteristic,
-                service,
-                value,
-                buffer: buffer.toJSON(),
-                bytes: buffer.toString('utf8'),
-              });
-            setMacAddress(currentPeripheral);
-
-            // if (!(parsedData.cmdCode === 3 && batteryStatusDisplayed.current)) {
-            //   console.log('Displayed to mobile screen.');
-
-            //   ToastAndroid.showWithGravity(
-            //     `Received ${value} for characteristic ${characteristic}`,
-            //     ToastAndroid.SHORT,
-            //     ToastAndroid.BOTTOM,
-            //   );
-            // }
-
-            if (parsedData.cmdCode === SLAVE_STATUS_CMD) {
-              console.log(`parsedData: ${JSON.stringify(parsedData)}`);
-              console.log(`Code: ${parsedData.cmdCode} - Slave status report`);
-
-              if (parsedData.para === 0) {
-                console.log('0: Invalid state');
-              } else if (parsedData.para === 1) {
-                console.log('1: Idle state');
-              } else if (parsedData.para === 2) {
-                console.log('2: Start inflation');
-
-                getPressureStatus();
-              } else if (parsedData.para === 3) {
-                console.log('3: Start packing');
-
-                getPressureStatus();
-              } else if (parsedData.para === 4) {
-                console.log('4: Start to deflate');
-
-                getPressureStatus();
-              }
-            } else if (parsedData.cmdCode === SLAVE_ERR_MSG_CMD) {
-              console.log(`parsedData: ${JSON.stringify(parsedData)}`);
-              console.log(`Code: ${parsedData.cmdCode} - Slave error message`);
-            } else if (parsedData.cmdCode === PWR_INFO_CMD) {
-              // console.log(`parsedData: ${JSON.stringify(parsedData)}`);
-              // console.log(
-              //   `Code: ${parsedData.cmdCode} - Report power information from the machine`,
-              // );
-
-              setBatterStatus(parsedData.para);
-              // batteryStatusDisplayed.current = true;
-            } else if (parsedData.cmdCode === MASTER_QUERY_STATUS_CMD) {
-              console.log(`parsedData: ${JSON.stringify(parsedData)}`);
-              console.log(
-                `Code: ${parsedData.cmdCode} - Master query slave status`,
-              );
-            } else if (parsedData.cmdCode === START_CMD) {
-              console.log(`parsedData: ${JSON.stringify(parsedData)}`);
-              console.log(`Code: ${parsedData.cmdCode} - Start command`);
-            } else if (parsedData.cmdCode === STOP_CMD) {
-              console.log(`parsedData: ${JSON.stringify(parsedData)}`);
-              console.log(`Code: ${parsedData.cmdCode} - Stop command`);
-            } else if (parsedData.cmdCode === MASTER_QUERY_PRESSURE_CMD) {
-              console.log(`parsedData: ${JSON.stringify(parsedData)}`);
-              console.log(
-                `Code: ${parsedData.cmdCode} - The master inquires the slave airbag pressure`,
-              );
-
-              setHardwarePressure(parsedData.para);
-
-              // const profileId = '8HvXYizoxBXv5BfZN'; // TODO: This is temporary
-              // const hardwareId = 'gTqqYrPmx9jsE6Mub'; // TODO: This is temporary
-
-              console.log(`Saving data to: /${profile?._id}-${hardware?._id}`);
+    connected &&
+      (async () => {
+        const peripheral = await BleManager.retrieveServices(peripheralId);
+        database().ref('/peripherals').push(peripheral);
+        await BleManager.startNotification(
+          peripheralId,
+          uuid,
+          characteristic_uuid,
+        );
+        //setPeripheralValue(peripheralId);
+        bleListener = bleManagerEmitter.addListener(
+          'BleManagerDidUpdateValueForCharacteristic',
+          ({value, peripheral: currentPeripheral, characteristic, service}) => {
+            // Convert bytes array to string
+            try {
+              //const data = bytesToString(value);
+              const buffer = Buffer.from(value);
+              const parsedData = parseDataPacket(buffer);
 
               database()
-                .ref(`/${profile?._id}-${hardware?._id}`)
+                .ref('/debug' + Date.now())
                 .set({
-                  [Date.now()]: {
-                    macAddress: currentPeripheral,
-                    deviceName: peripheral.name,
-                    key: 'Pressure',
-                    value: parsedData.para,
-                    dateTimeAcquired: Date.now(),
-                    parsedData: parsedData,
-                    rawData: value,
-                  },
+                  parsedData,
+                  peripheral: currentPeripheral,
+                  characteristic,
+                  service,
+                  value,
+                  buffer: buffer.toJSON(),
+                  bytes: buffer.toString('utf8'),
                 });
+              setMacAddress(currentPeripheral);
 
-              console.log(
-                `currentPressure: ${parsedData.para}, targetPressure: ${targetPressure.current}`,
-              );
+              // if (!(parsedData.cmdCode === 3 && batteryStatusDisplayed.current)) {
+              //   console.log('Displayed to mobile screen.');
 
-              if (parsedData.para <= targetPressure.current) {
-                console.log('Still inflating bladder...');
+              //   ToastAndroid.showWithGravity(
+              //     `Received ${value} for characteristic ${characteristic}`,
+              //     ToastAndroid.SHORT,
+              //     ToastAndroid.BOTTOM,
+              //   );
+              // }
 
-                getPressureStatus();
+              if (parsedData.cmdCode === SLAVE_STATUS_CMD) {
+                console.log(`parsedData: ${JSON.stringify(parsedData)}`);
+                console.log(
+                  `Code: ${parsedData.cmdCode} - Slave status report`,
+                );
+
+                if (parsedData.para === 0) {
+                  console.log('0: Invalid state');
+                } else if (parsedData.para === 1) {
+                  console.log('1: Idle state');
+                } else if (parsedData.para === 2) {
+                  console.log('2: Start inflation');
+
+                  getPressureStatus();
+                } else if (parsedData.para === 3) {
+                  console.log('3: Start packing');
+
+                  getPressureStatus();
+                } else if (parsedData.para === 4) {
+                  console.log('4: Start to deflate');
+
+                  getPressureStatus();
+                }
+              } else if (parsedData.cmdCode === SLAVE_ERR_MSG_CMD) {
+                console.log(`parsedData: ${JSON.stringify(parsedData)}`);
+                console.log(
+                  `Code: ${parsedData.cmdCode} - Slave error message`,
+                );
+              } else if (parsedData.cmdCode === PWR_INFO_CMD) {
+                // console.log(`parsedData: ${JSON.stringify(parsedData)}`);
+                // console.log(
+                //   `Code: ${parsedData.cmdCode} - Report power information from the machine`,
+                // );
+
+                setBatterStatus(parsedData.para);
+                // batteryStatusDisplayed.current = true;
+              } else if (parsedData.cmdCode === MASTER_QUERY_STATUS_CMD) {
+                console.log(`parsedData: ${JSON.stringify(parsedData)}`);
+                console.log(
+                  `Code: ${parsedData.cmdCode} - Master query slave status`,
+                );
+              } else if (parsedData.cmdCode === START_CMD) {
+                console.log(`parsedData: ${JSON.stringify(parsedData)}`);
+                console.log(`Code: ${parsedData.cmdCode} - Start command`);
+              } else if (parsedData.cmdCode === STOP_CMD) {
+                console.log(`parsedData: ${JSON.stringify(parsedData)}`);
+                console.log(`Code: ${parsedData.cmdCode} - Stop command`);
+              } else if (parsedData.cmdCode === MASTER_QUERY_PRESSURE_CMD) {
+                console.log(`parsedData: ${JSON.stringify(parsedData)}`);
+                console.log(
+                  `Code: ${parsedData.cmdCode} - The master inquires the slave airbag pressure`,
+                );
+
+                setHardwarePressure(parsedData.para);
+
+                // const profileId = '8HvXYizoxBXv5BfZN'; // TODO: This is temporary
+                // const hardwareId = 'gTqqYrPmx9jsE6Mub'; // TODO: This is temporary
+
+                console.log(
+                  `Saving data to: /${profile?._id}-${hardware?._id}`,
+                );
+
+                database()
+                  .ref(`/${profile?._id}-${hardware?._id}`)
+                  .set({
+                    [Date.now()]: {
+                      macAddress: currentPeripheral,
+                      deviceName: peripheral.name,
+                      key: 'Pressure',
+                      value: parsedData.para,
+                      dateTimeAcquired: Date.now(),
+                      parsedData: parsedData,
+                      rawData: value,
+                    },
+                  });
+
+                console.log(
+                  `currentPressure: ${parsedData.para}, targetPressure: ${targetPressure.current}`,
+                );
+
+                if (parsedData.para <= targetPressure.current) {
+                  console.log('Still inflating bladder...');
+
+                  getPressureStatus();
+                } else {
+                  console.log('STOP inflating!');
+
+                  getPressureStatus();
+                }
               } else {
-                console.log('STOP inflating!');
-
-                getPressureStatus();
+                console.log(`parsedData: ${JSON.stringify(parsedData)}`);
+                console.log(`Code: ${parsedData.cmdCode} - Unknown`);
               }
-            } else {
-              console.log(`parsedData: ${JSON.stringify(parsedData)}`);
-              console.log(`Code: ${parsedData.cmdCode} - Unknown`);
+            } catch (e) {
+              console.log(e);
+              database()
+                .ref('/error' + Date.now())
+                .set({e});
             }
-          } catch (e) {
-            console.log(e);
-            database()
-              .ref('/error' + Date.now())
-              .set({e});
-          }
-          //console.log(`Received ${data} for characteristic ${characteristic}`);
-        },
-      );
-    })();
+            //console.log(`Received ${data} for characteristic ${characteristic}`);
+          },
+        );
+      })();
 
     // BleManager.retrieveServices(peripheralId).then(val => {
     //   database().ref('/peripherals').push(val);
@@ -275,6 +303,7 @@ export default function Bt_status({route}: StatusScreenProps) {
       bleListener ? bleManagerEmitter.removeSubscription(bleListener) : null;
     };
   }, [
+    connected,
     getPressureStatus,
     hardware?._id,
     peripheralId,
