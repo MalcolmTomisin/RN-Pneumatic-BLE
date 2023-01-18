@@ -26,7 +26,7 @@ import {DeviceConnectProps} from 'src/navigators/dashboard/connect/types';
 import BleManager from 'react-native-ble-manager';
 import {check, PERMISSIONS, RESULTS} from 'react-native-permissions';
 import {hexToUUID} from 'src/utils';
-import {PeripheralContext} from 'App';
+import { useAppAuth } from 'src/store';
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
@@ -67,8 +67,7 @@ export default function ListDevices({navigation}: DeviceConnectProps) {
   const [list, setList] = React.useState([]);
   const [isScanning, setIsScanning] = React.useState<boolean>(false);
   const peripherals = new Map();
-  const {peripheralValue, setPeripheralValue} =
-    React.useContext(PeripheralContext);
+  const setPeripheralValue = useAppAuth(state => state.setPeripheralAddress);
 
   const startScan = () => {
     BleManager.scan([], 15, true)
