@@ -27,6 +27,7 @@ import BleManager from 'react-native-ble-manager';
 import {check, PERMISSIONS, RESULTS} from 'react-native-permissions';
 import {hexToUUID} from 'src/utils';
 import { useAppAuth } from 'src/store';
+import { color } from 'react-native-reanimated';
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
@@ -162,7 +163,7 @@ export default function ListDevices({navigation}: DeviceConnectProps) {
       //contentContainerStyle={{marginBottom: normalize(80)}}
       style={[styles.container, {paddingBottom: normalize(80)}]}>
       <Text style={styles.bold}>Scanned Devices</Text>
-      <Text style={styles.pale}>
+      <Text style={[styles.pale, {color: appColors.black}]}>
         Pair with your device below. Make sure your device is powered on.
       </Text>
 
@@ -208,7 +209,7 @@ export default function ListDevices({navigation}: DeviceConnectProps) {
               }}>{`${v.name ? v.name : 'NO NAME'}`}</Text>
           </TouchableOpacity>
         ))}
-      <View style={{paddingTop: normalizeHeight(100)}}>
+      <View style={{paddingVertical: normalizeHeight(100)}}>
         <Button
           style={[
             {
