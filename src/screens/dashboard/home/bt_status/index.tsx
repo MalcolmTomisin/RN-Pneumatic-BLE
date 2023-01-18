@@ -489,8 +489,8 @@ export default function Bt_status({route}: StatusScreenProps) {
         />{' '}
         Device
       </Text> */}
-      <Text style={styles.pale}>
-        Select the preferred pressure of the device.
+      <Text style={[styles.pale, {color: appColors.black}]}>
+        Set the preferred pressure of the device.
       </Text>
       {/* <TextInput
         value={userInput}
@@ -563,8 +563,9 @@ export default function Bt_status({route}: StatusScreenProps) {
           style={[
             styles.pale,
             {
+              color: appColors.black,
               marginTop: normalize(32),
-              marginBottom: normalize(28),
+              marginBottom: normalize(32),
               textAlign: 'center',
             },
           ]}>
