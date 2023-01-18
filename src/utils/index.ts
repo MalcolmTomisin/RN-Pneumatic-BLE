@@ -161,3 +161,7 @@ export const showToast = (text: string) => {
     ToastAndroid.showWithGravity(text, ToastAndroid.SHORT, ToastAndroid.BOTTOM);
   }
 };
+
+export const emptyPersistedState = () => {
+  storage.clearAll();
+};
