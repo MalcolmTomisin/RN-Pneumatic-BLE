@@ -12,6 +12,8 @@ interface AuthState {
   setHardware: (arg: HardwareType) => void;
   setProfile: (arg: ProfileType) => void;
   setEmptyState: () => void;
+  peripheralAddress?: string;
+  setPeripheralAddress: (address: string) => void;
 }
 
 const initialState = {
@@ -32,4 +34,6 @@ export const useAppAuth = create<AuthState>(set => ({
   setHardware: (h: HardwareType) => set(state => ({...state, hardware: h})),
   setProfile: (h: ProfileType) => set(state => ({...state, profile: h})),
   setEmptyState: () => set(state => ({...state, ...initialState})),
+  setPeripheralAddress: address =>
+    set(state => ({...state, peripheralAddress: address})),
 }));

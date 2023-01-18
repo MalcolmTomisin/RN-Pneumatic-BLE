@@ -17,7 +17,6 @@ import BleManager from 'react-native-ble-manager';
 import database from '@react-native-firebase/database';
 import {Buffer} from '@craftzdog/react-native-buffer';
 import {parseDataPacket} from 'src/utils';
-import {PeripheralContext} from 'App';
 import {useAppAuth} from 'src/store';
 
 const BleManagerModule = NativeModules.BleManager;
@@ -45,11 +44,10 @@ export default function Bt_status({route}: StatusScreenProps) {
   const [hardwarePressure, setHardwarePressure] = React.useState(0);
   const [macAddress, setMacAddress] = React.useState('');
   const targetPressure = React.useRef(0);
-  const {peripheralValue, setPeripheralValue} =
-    React.useContext(PeripheralContext);
-  const {profile, hardware} = useAppAuth(state => ({
+  const {profile, hardware, setPeripheralValue} = useAppAuth(state => ({
     profile: state.profile,
     hardware: state.hardware,
+    setPeripheralValue: state.setPeripheralAddress,
   }));
 
   /**
@@ -276,7 +274,13 @@ export default function Bt_status({route}: StatusScreenProps) {
     return () => {
       bleListener ? bleManagerEmitter.removeSubscription(bleListener) : null;
     };
-  }, [getPressureStatus, peripheralId, setPeripheralValue]);
+  }, [
+    getPressureStatus,
+    hardware?._id,
+    peripheralId,
+    profile?._id,
+    setPeripheralValue,
+  ]);
 
   /**
    *

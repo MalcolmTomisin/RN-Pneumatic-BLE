@@ -187,6 +187,7 @@ export default function ListDevices({navigation}: DeviceConnectProps) {
                     ToastAndroid.SHORT,
                     ToastAndroid.BOTTOM,
                   );
+                  navigation.popToTop();
                   navigation.navigate(appRoutes['Bt Status'], {
                     peripheralId: v.id,
                   });
@@ -219,7 +220,7 @@ export default function ListDevices({navigation}: DeviceConnectProps) {
           mode="outlined"
           onPress={
             !isScanning
-              ? retrieveConnected
+              ? startScan
               : () => {
                   console.log('still scanning');
                 }
@@ -227,12 +228,12 @@ export default function ListDevices({navigation}: DeviceConnectProps) {
           labelStyle={{color: appColors.blueprimary}}>
           Scan
         </Button>
-        <Button
+        {/* <Button
           style={{
             backgroundColor: appColors.blueprimary,
           }}>
           Connect
-        </Button>
+        </Button> */}
       </View>
     </ScrollView>
   );
