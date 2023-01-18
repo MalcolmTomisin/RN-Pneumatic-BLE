@@ -14,7 +14,8 @@ import {axiosInstance} from 'src/network';
 import {useAppAuth} from 'src/store';
 import type {LoginResponseType} from 'src/schemas';
 import {LoginResponseSchema} from 'src/schemas';
-import {AxiosResponse} from 'axios';
+import {AxiosResponse, isAxiosError} from 'axios';
+import {showToast} from 'src/utils';
 
 export default function Login({navigation}: LoginScreenProps) {
   const darkMode = useColorScheme() === 'dark';
@@ -46,7 +47,15 @@ export default function Login({navigation}: LoginScreenProps) {
           setSignIn(true);
         } catch (e) {
           console.log(e);
+          showToast('Bad response from service');
         }
+      },
+      onError: err => {
+        if (isAxiosError(err)) {
+          showToast('Login failed');
+          return;
+        }
+        showToast('Network error');
       },
     },
   );
@@ -90,7 +99,10 @@ export default function Login({navigation}: LoginScreenProps) {
         <Text style={styles.terms}>Terms & Conditions and Privacy Policy</Text>
         of Smart Brace Technology by Spinal Technology
       </Text>
-      <Button onPress={signIn.mutate} style={styles.btn}>
+      <Button
+        loading={signIn.isLoading}
+        onPress={signIn.mutate}
+        style={styles.btn}>
         Log In
       </Button>
       <Text
