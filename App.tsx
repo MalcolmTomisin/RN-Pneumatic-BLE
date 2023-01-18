@@ -43,7 +43,7 @@ const Service: {
 
 const App = () => {
   const isDarkMode = useColorScheme() === 'dark';
-  const [isReady, setIsReady] = React.useState(__DEV__ ? true : false);
+  const [isReady, setIsReady] = React.useState(false);
   const [initialState, setInitialState] = React.useState();
   const theme = isDarkMode ? CombinedDarkTheme : CombinedDefaultTheme;
   const appState = React.useRef(AppState.currentState);
@@ -126,7 +126,7 @@ const App = () => {
         const state = savedStateString
           ? JSON.parse(savedStateString)
           : undefined;
-        if (state !== undefined) {
+        if (state) {
           setInitialState(state);
         }
       }
@@ -137,8 +137,10 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    restoreState(storage);
-  }, [restoreState]);
+    if (!isReady) {
+      restoreState(storage);
+    }
+  }, [isReady, restoreState]);
 
   if (!isReady && appConfig.IS_ANDROID) {
     return <View style={{flex: 1, backgroundColor: appColors.background}} />;
