@@ -59,7 +59,7 @@ async function connectAndPrepare(
       console.log(`Received ${data} for characteristic ${characteristic}`);
     },
   );
-  // Actions triggereng BleManagerDidUpdateValueForCharacteristic event
+  // Actions triggering BleManagerDidUpdateValueForCharacteristic event
 }
 
 export default function ListDevices({navigation}: DeviceConnectProps) {

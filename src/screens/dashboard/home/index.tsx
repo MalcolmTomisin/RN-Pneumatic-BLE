@@ -137,10 +137,9 @@ export default function Home({navigation}: DeviceScreenProps) {
             : CombinedDefaultTheme.colors.background
         }
       />
-      <Text style={styles.bold}>Connect Device</Text>
-      <Text style={styles.pale}>
-        Pair with your device below. Make sure your device is powered on.
-      </Text>
+      <Text style={styles.bold}>Pairing Setup</Text>
+      <Text>
+        Allow access to your location and bluetooth. Make sure your device is powered on.</Text>
       <View style={{marginTop: normalizeHeight(328)}}>
         <Button
           style={[

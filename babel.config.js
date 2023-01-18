@@ -26,7 +26,6 @@ module.exports = api => {
         root: ['.'],
       },
     ],
-    // ['module:react-native-dotenv'],
     ['react-native-paper/babel'],
     ['module:react-native-dotenv'],
   ];
