@@ -36,7 +36,7 @@ const MASTER_QUERY_PRESSURE_CMD = 36;
 const CMD_DELAY = 500;
 const SAVE_INTERVAL = 60000;
 
-export default function Bt_status({route}: StatusScreenProps) {
+export default function Bt_status({route, navigation}: StatusScreenProps) {
   const {peripheralId} = route.params;
   // const batteryStatusDisplayed = React.useRef(false);
   const getInitialPressure = React.useRef(false);
@@ -70,11 +70,13 @@ export default function Bt_status({route}: StatusScreenProps) {
 
   React.useLayoutEffect(() => {
     (async () => {
-      const isConnected = await BleManager.isPeripheralConnected(
+      let isConnected = await BleManager.isPeripheralConnected(
         peripheralId,
         [],
       );
-      if (!isConnected) {
+      if (isConnected) {
+        setConnected(true);
+      } else {
         BleManager.connect(peripheralId)
           .then(() => {
             showToast('Connected');
@@ -82,12 +84,20 @@ export default function Bt_status({route}: StatusScreenProps) {
           })
           .catch(() => {
             showToast('Not connected');
+          })
+          .finally(async () => {
+            isConnected = await BleManager.isPeripheralConnected(
+              peripheralId,
+              [],
+            );
+
+            if (!isConnected) {
+              navigation.goBack();
+            }
           });
-      } else {
-        setConnected(true);
       }
     })();
-  }, [peripheralId]);
+  }, [navigation, peripheralId]);
 
   /**
    *
