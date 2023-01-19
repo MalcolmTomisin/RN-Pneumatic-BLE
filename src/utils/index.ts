@@ -6,6 +6,7 @@ import {
 } from '@tanstack/react-query-persist-client';
 import {QueryClient} from '@tanstack/react-query';
 import {Platform, ToastAndroid} from 'react-native';
+import BleManager from 'react-native-ble-manager';
 
 type QueryStorage = {
   getItem: (key: string) => Promisable<PersistedClient | undefined>;
@@ -164,4 +165,23 @@ export const showToast = (text: string) => {
 
 export const emptyPersistedState = () => {
   storage.clearAll();
+};
+
+export const disconnectPeripheral = async (peripheral: string) => {
+  const isConnected = await BleManager.isPeripheralConnected(peripheral, []);
+
+  if (!isConnected) {
+    return;
+  }
+  try {
+    BleManager.disconnect(peripheral, true);
+  } catch (e) {
+    console.log(e);
+    showToast('Disconnect unsuccessful');
+  }
+};
+
+export const performSignOutRites = (peripheral?: string) => {
+  peripheral ? disconnectPeripheral(peripheral) : null;
+  emptyPersistedState();
 };
