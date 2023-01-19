@@ -82,7 +82,7 @@ const App = () => {
         storage.set('APP_AUTH', JSON.stringify(useAppAuth.getState()));
         if (peripheralValue) {
           console.log('Service running...');
-          Service.launchService(peripheralValue);
+          Platform.OS === 'android' && Service.launchService(peripheralValue);
         }
       }
     });
@@ -96,7 +96,7 @@ const App = () => {
     const subscription = AppState.addEventListener('change', nextState => {
       if (nextState === 'active') {
         appState.current = nextState;
-        Service.closeService();
+        Platform.OS === 'android' && Service.closeService();
         const stringifiedState = storage.getString('APP_AUTH');
         const persistedState:
           | {isSignedIn: boolean; token?: string}
