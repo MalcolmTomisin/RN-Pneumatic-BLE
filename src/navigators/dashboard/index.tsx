@@ -7,14 +7,22 @@ import exit from 'assets/images/exit.png';
 import compass from 'assets/images/compass.png';
 import DeviceStack from './connect';
 import ProfileStack from './profile';
-import {emptyPersistedState} from 'src/utils';
+import {performSignOutRites} from 'src/utils';
 import {useAppAuth} from 'src/store';
+import {EventArg} from '@react-navigation/native';
 
 const Drawer = createDrawerNavigator();
 const Logout = () => <View />;
 
 export default function DashboardStack() {
   const setEmptyState = useAppAuth(state => state.setEmptyState);
+
+  const handleSignOut = (e: EventArg<'drawerItemPress', true, undefined>) => {
+    e.preventDefault();
+    const peripheral = useAppAuth.getState().peripheralAddress;
+    performSignOutRites(peripheral);
+    setEmptyState();
+  };
 
   return (
     <Drawer.Navigator
@@ -129,11 +137,7 @@ export default function DashboardStack() {
         }}
         component={Logout}
         listeners={({navigation}) => ({
-          drawerItemPress: e => {
-            e.preventDefault();
-            setEmptyState();
-            emptyPersistedState();
-          },
+          drawerItemPress: handleSignOut,
         })}
       />
     </Drawer.Navigator>
