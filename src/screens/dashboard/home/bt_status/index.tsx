@@ -152,7 +152,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
    * This is called every 1 minute.
    */
   const delaySaveResults = React.useCallback(() => {
-    const currentResult = results.current.pop();
+    const currentResult = results.current.shift();
 
     if (currentResult) {
       console.log(`${Date.now()} - delaySaveResults:`, currentResult);
@@ -340,7 +340,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
                   }, SAVE_INTERVAL);
                 }
 
-                if (parsedData.para < targetPressure.current) {
+                if (parsedData.para <= targetPressure.current) {
                   console.log('Still inflating bladder...');
 
                   getPressureStatus();
