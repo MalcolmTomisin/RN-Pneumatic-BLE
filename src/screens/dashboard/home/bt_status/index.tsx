@@ -13,7 +13,7 @@ import {
 import Slider from '@react-native-community/slider';
 import {appColors, appFonts, normalize, normalizeHeight} from 'src/config';
 import {StatusScreenProps} from 'src/navigators/dashboard/connect/types';
-import BleManager from 'react-native-ble-manager';
+import BleManager, {read} from 'react-native-ble-manager';
 import database from '@react-native-firebase/database';
 import {Buffer} from '@craftzdog/react-native-buffer';
 import {parseDataPacket, showToast} from 'src/utils';
@@ -34,10 +34,12 @@ const START_CMD = 34;
 const STOP_CMD = 35;
 const MASTER_QUERY_PRESSURE_CMD = 36;
 const CMD_DELAY = 500;
+const SAVE_INTERVAL = 60000;
 
 export default function Bt_status({route}: StatusScreenProps) {
   const {peripheralId} = route.params;
   // const batteryStatusDisplayed = React.useRef(false);
+  const getInitialPressure = React.useRef(false);
   const [userInput, setInput] = React.useState('');
   const [batterStatus, setBatterStatus] = React.useState(0);
   const [sliderPressure, setSliderPressure] = React.useState(0);
@@ -62,9 +64,9 @@ export default function Bt_status({route}: StatusScreenProps) {
     parsedData: {},
     rawData: {},
   };
-  const result = React.useRef(resultObject);
-  const interval1Id = React.useRef(0);
-  const interval2Id = React.useRef(0);
+  // const result = React.useRef(resultObject);
+  const intervalId = React.useRef(0);
+  const results = React.useRef<Array<typeof resultObject>>([]);
 
   React.useLayoutEffect(() => {
     (async () => {
@@ -137,11 +139,13 @@ export default function Bt_status({route}: StatusScreenProps) {
   }, [write]);
 
   /**
-   *
+   * This is called every 1 minute.
    */
-  const saveResultsSlower = (currentResult: typeof resultObject) => {
-    if (currentResult.cmdCode === MASTER_QUERY_PRESSURE_CMD) {
-      console.log('saveResultsSlower:', currentResult);
+  const delaySaveResults = React.useCallback(() => {
+    const currentResult = results.current.pop();
+
+    if (currentResult) {
+      console.log(`${Date.now()} - delaySaveResults:`, currentResult);
 
       database()
         .ref(`/${currentResult.profileId}-${currentResult.hardwareId}`)
@@ -155,7 +159,7 @@ export default function Bt_status({route}: StatusScreenProps) {
           rawData: currentResult.rawData,
         });
     }
-  };
+  }, []);
 
   React.useEffect(() => {
     let bleListener: EmitterSubscription;
@@ -174,6 +178,18 @@ export default function Bt_status({route}: StatusScreenProps) {
           ({value, peripheral: currentPeripheral, characteristic, service}) => {
             // Convert bytes array to string
             try {
+              // Get the pressure when the app starts
+              if (!getInitialPressure.current) {
+                getInitialPressure.current = true;
+
+                if (intervalId.current > 0) {
+                  clearInterval(intervalId.current);
+                  intervalId.current = 0;
+                }
+
+                getPressureStatus();
+              }
+
               //const data = bytesToString(value);
               const buffer = Buffer.from(value);
               const parsedData = parseDataPacket(buffer);
@@ -201,18 +217,18 @@ export default function Bt_status({route}: StatusScreenProps) {
               //   );
               // }
 
-              result.current = {
-                cmdCode: parsedData.cmdCode,
-                profileId: profile?._id ?? '',
-                hardwareId: hardware?._id ?? '',
-                macAddress: currentPeripheral,
-                deviceName: peripheral.name ?? '',
-                key: 'Pressure',
-                value: parsedData.para,
-                dateTimeAcquired: Date.now(),
-                parsedData: parsedData,
-                rawData: value,
-              };
+              // result.current = {
+              //   cmdCode: parsedData.cmdCode,
+              //   profileId: profile?._id ?? '',
+              //   hardwareId: hardware?._id ?? '',
+              //   macAddress: currentPeripheral,
+              //   deviceName: peripheral.name ?? '',
+              //   key: 'Pressure',
+              //   value: parsedData.para,
+              //   dateTimeAcquired: Date.now(),
+              //   parsedData: parsedData,
+              //   rawData: value,
+              // };
 
               if (parsedData.cmdCode === SLAVE_STATUS_CMD) {
                 console.log(`parsedData: ${JSON.stringify(parsedData)}`);
@@ -228,13 +244,6 @@ export default function Bt_status({route}: StatusScreenProps) {
                   console.log('2: Start inflation');
 
                   getPressureStatus();
-
-                  if (interval2Id.current <= 0) {
-                    // interval1Id.current = setInterval(getPressureStatus, 500);
-                    interval2Id.current = setInterval(() => {
-                      saveResultsSlower(result.current);
-                    }, 1000);
-                  }
                 } else if (parsedData.para === 3) {
                   console.log('3: Start packing');
 
@@ -301,17 +310,34 @@ export default function Bt_status({route}: StatusScreenProps) {
                   `currentPressure: ${parsedData.para}, targetPressure: ${targetPressure.current}`,
                 );
 
-                if (parsedData.para === 0) {
-                  // clearInterval(interval1Id.current);
-                  clearInterval(interval2Id.current);
-                } else if (parsedData.para <= targetPressure.current) {
+                results.current.push({
+                  cmdCode: parsedData.cmdCode,
+                  profileId: profile?._id ?? '',
+                  hardwareId: hardware?._id ?? '',
+                  macAddress: currentPeripheral,
+                  deviceName: peripheral.name ?? '',
+                  key: 'Pressure',
+                  value: parsedData.para,
+                  dateTimeAcquired: Date.now(),
+                  parsedData: parsedData,
+                  rawData: value,
+                });
+
+                if (intervalId.current <= 0) {
+                  delaySaveResults();
+                  intervalId.current = setInterval(() => {
+                    delaySaveResults();
+                  }, SAVE_INTERVAL);
+                }
+
+                if (parsedData.para < targetPressure.current) {
                   console.log('Still inflating bladder...');
 
                   getPressureStatus();
-                } else {
-                  console.log('STOP inflating!');
+                  // } else {
+                  //   console.log('STOP inflating!');
 
-                  getPressureStatus();
+                  //   getPressureStatus();
                 }
               } else {
                 console.log(`parsedData: ${JSON.stringify(parsedData)}`);
@@ -368,6 +394,7 @@ export default function Bt_status({route}: StatusScreenProps) {
     hardware?._id,
     peripheralId,
     profile?._id,
+    delaySaveResults,
     setPeripheralValue,
   ]);
 
