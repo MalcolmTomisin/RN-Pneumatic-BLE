@@ -34,7 +34,7 @@ const START_CMD = 34;
 const STOP_CMD = 35;
 const MASTER_QUERY_PRESSURE_CMD = 36;
 const CMD_DELAY = 500;
-const SAVE_INTERVAL = 60000;
+const SAVE_INTERVAL = 10000;
 
 export default function Bt_status({route, navigation}: StatusScreenProps) {
   const {peripheralId} = route.params;
