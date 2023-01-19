@@ -64,7 +64,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
     parsedData: {},
     rawData: {},
   };
-  // const result = React.useRef(resultObject);
+  const result = React.useRef(resultObject);
   const intervalId = React.useRef(0);
   const results = React.useRef<Array<typeof resultObject>>([]);
 
@@ -157,16 +157,27 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
     if (currentResult) {
       console.log(`${Date.now()} - delaySaveResults:`, currentResult);
 
+      // database()
+      //   .ref(`/${currentResult.profileId}-${currentResult.hardwareId}`)
+      //   .push({
+      //     macAddress: currentResult.macAddress,
+      //     deviceName: currentResult.deviceName,
+      //     key: currentResult.key,
+      //     value: currentResult.value,
+      //     dateTimeAcquired: currentResult.dateTimeAcquired,
+      //     parsedData: currentResult.parsedData,
+      //     rawData: currentResult.rawData,
+      //   });
       database()
-        .ref(`/${currentResult.profileId}-${currentResult.hardwareId}`)
+        .ref(`/${result.current.profileId}-${result.current.hardwareId}`)
         .push({
-          macAddress: currentResult.macAddress,
-          deviceName: currentResult.deviceName,
-          key: currentResult.key,
-          value: currentResult.value,
-          dateTimeAcquired: currentResult.dateTimeAcquired,
-          parsedData: currentResult.parsedData,
-          rawData: currentResult.rawData,
+          macAddress: result.current.macAddress,
+          deviceName: result.current.deviceName,
+          key: result.current.key,
+          value: result.current.value,
+          dateTimeAcquired: result.current.dateTimeAcquired,
+          parsedData: result.current.parsedData,
+          rawData: result.current.rawData,
         });
     }
   }, []);
@@ -226,19 +237,6 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
               //     ToastAndroid.BOTTOM,
               //   );
               // }
-
-              // result.current = {
-              //   cmdCode: parsedData.cmdCode,
-              //   profileId: profile?._id ?? '',
-              //   hardwareId: hardware?._id ?? '',
-              //   macAddress: currentPeripheral,
-              //   deviceName: peripheral.name ?? '',
-              //   key: 'Pressure',
-              //   value: parsedData.para,
-              //   dateTimeAcquired: Date.now(),
-              //   parsedData: parsedData,
-              //   rawData: value,
-              // };
 
               if (parsedData.cmdCode === SLAVE_STATUS_CMD) {
                 console.log(`parsedData: ${JSON.stringify(parsedData)}`);
@@ -319,6 +317,19 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
                 console.log(
                   `currentPressure: ${parsedData.para}, targetPressure: ${targetPressure.current}`,
                 );
+
+                result.current = {
+                  cmdCode: parsedData.cmdCode,
+                  profileId: profile?._id ?? '',
+                  hardwareId: hardware?._id ?? '',
+                  macAddress: currentPeripheral,
+                  deviceName: peripheral.name ?? '',
+                  key: 'Pressure',
+                  value: parsedData.para,
+                  dateTimeAcquired: Date.now(),
+                  parsedData: parsedData,
+                  rawData: value,
+                };
 
                 results.current.push({
                   cmdCode: parsedData.cmdCode,
