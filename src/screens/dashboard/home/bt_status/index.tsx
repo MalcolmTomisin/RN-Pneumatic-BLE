@@ -50,6 +50,21 @@ export default function Bt_status({route}: StatusScreenProps) {
     setPeripheralValue: state.setPeripheralAddress,
   }));
   const [connected, setConnected] = React.useState<boolean>(false);
+  const resultObject = {
+    cmdCode: 0,
+    profileId: '',
+    hardwareId: '',
+    macAddress: '',
+    deviceName: '',
+    key: 'Pressure',
+    value: 0,
+    dateTimeAcquired: 0,
+    parsedData: {},
+    rawData: {},
+  };
+  const result = React.useRef(resultObject);
+  const interval1Id = React.useRef(0);
+  const interval2Id = React.useRef(0);
 
   React.useLayoutEffect(() => {
     (async () => {
@@ -71,6 +86,7 @@ export default function Bt_status({route}: StatusScreenProps) {
       }
     })();
   }, [peripheralId]);
+
   /**
    *
    * @param cmd
@@ -120,6 +136,27 @@ export default function Bt_status({route}: StatusScreenProps) {
     }, 500);
   }, [write]);
 
+  /**
+   *
+   */
+  const saveResultsSlower = (currentResult: typeof resultObject) => {
+    if (currentResult.cmdCode === MASTER_QUERY_PRESSURE_CMD) {
+      console.log('saveResultsSlower:', currentResult);
+
+      database()
+        .ref(`/${currentResult.profileId}-${currentResult.hardwareId}`)
+        .push({
+          macAddress: currentResult.macAddress,
+          deviceName: currentResult.deviceName,
+          key: currentResult.key,
+          value: currentResult.value,
+          dateTimeAcquired: currentResult.dateTimeAcquired,
+          parsedData: currentResult.parsedData,
+          rawData: currentResult.rawData,
+        });
+    }
+  };
+
   React.useEffect(() => {
     let bleListener: EmitterSubscription;
     connected &&
@@ -164,6 +201,19 @@ export default function Bt_status({route}: StatusScreenProps) {
               //   );
               // }
 
+              result.current = {
+                cmdCode: parsedData.cmdCode,
+                profileId: profile?._id ?? '',
+                hardwareId: hardware?._id ?? '',
+                macAddress: currentPeripheral,
+                deviceName: peripheral.name ?? '',
+                key: 'Pressure',
+                value: parsedData.para,
+                dateTimeAcquired: Date.now(),
+                parsedData: parsedData,
+                rawData: value,
+              };
+
               if (parsedData.cmdCode === SLAVE_STATUS_CMD) {
                 console.log(`parsedData: ${JSON.stringify(parsedData)}`);
                 console.log(
@@ -178,6 +228,13 @@ export default function Bt_status({route}: StatusScreenProps) {
                   console.log('2: Start inflation');
 
                   getPressureStatus();
+
+                  if (interval2Id.current <= 0) {
+                    // interval1Id.current = setInterval(getPressureStatus, 500);
+                    interval2Id.current = setInterval(() => {
+                      saveResultsSlower(result.current);
+                    }, 1000);
+                  }
                 } else if (parsedData.para === 3) {
                   console.log('3: Start packing');
 
@@ -226,25 +283,28 @@ export default function Bt_status({route}: StatusScreenProps) {
                   `Saving data to: /${profile?._id}-${hardware?._id}`,
                 );
 
-                database()
-                  .ref(`/${profile?._id}::${hardware?._id}`)
-                  .set({
-                    [Date.now()]: {
-                      macAddress: currentPeripheral,
-                      deviceName: peripheral.name,
-                      key: 'Pressure',
-                      value: parsedData.para,
-                      dateTimeAcquired: Date.now(),
-                      parsedData: parsedData,
-                      rawData: value,
-                    },
-                  });
+                // database()
+                //   .ref(`/${profile?._id}::${hardware?._id}`)
+                //   .set({
+                //     [Date.now()]: {
+                //       macAddress: currentPeripheral,
+                //       deviceName: peripheral.name,
+                //       key: 'Pressure',
+                //       value: parsedData.para,
+                //       dateTimeAcquired: Date.now(),
+                //       parsedData: parsedData,
+                //       rawData: value,
+                //     },
+                //   });
 
                 console.log(
                   `currentPressure: ${parsedData.para}, targetPressure: ${targetPressure.current}`,
                 );
 
-                if (parsedData.para <= targetPressure.current) {
+                if (parsedData.para === 0) {
+                  // clearInterval(interval1Id.current);
+                  clearInterval(interval2Id.current);
+                } else if (parsedData.para <= targetPressure.current) {
                   console.log('Still inflating bladder...');
 
                   getPressureStatus();
@@ -352,7 +412,9 @@ export default function Bt_status({route}: StatusScreenProps) {
    *
    */
   const decreasePressureHandler = () => {
-    console.log(`previousSliderPressure = ${sliderPressure}`);
+    console.log(
+      `decreasePressureHandler: previousSliderPressure = ${sliderPressure}`,
+    );
 
     let nextSliderPressure = 0;
 
@@ -385,7 +447,9 @@ export default function Bt_status({route}: StatusScreenProps) {
    *
    */
   const increasePressureHandler = () => {
-    console.log(`previousSliderPressure = ${sliderPressure}`);
+    console.log(
+      `increasePressureHandler: previousSliderPressure = ${sliderPressure}`,
+    );
 
     let nextSliderPressure = 0;
 
