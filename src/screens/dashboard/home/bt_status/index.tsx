@@ -66,7 +66,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
   };
   const result = React.useRef(resultObject);
   const intervalId = React.useRef(0);
-  const results = React.useRef<Array<typeof resultObject>>([]);
+  // const results = React.useRef<Array<typeof resultObject>>([]);
 
   React.useLayoutEffect(() => {
     (async () => {
@@ -152,34 +152,34 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
    * This is called every 1 minute.
    */
   const delaySaveResults = React.useCallback(() => {
-    const currentResult = results.current.shift();
+    // const currentResult = results.current.shift();
 
-    if (currentResult) {
-      console.log(`${Date.now()} - delaySaveResults:`, currentResult);
+    // if (currentResult) {
+    console.log(`${Date.now()} - delaySaveResults:`, result.current);
 
-      // database()
-      //   .ref(`/${currentResult.profileId}-${currentResult.hardwareId}`)
-      //   .push({
-      //     macAddress: currentResult.macAddress,
-      //     deviceName: currentResult.deviceName,
-      //     key: currentResult.key,
-      //     value: currentResult.value,
-      //     dateTimeAcquired: currentResult.dateTimeAcquired,
-      //     parsedData: currentResult.parsedData,
-      //     rawData: currentResult.rawData,
-      //   });
-      database()
-        .ref(`/${result.current.profileId}-${result.current.hardwareId}`)
-        .push({
-          macAddress: result.current.macAddress,
-          deviceName: result.current.deviceName,
-          key: result.current.key,
-          value: result.current.value,
-          dateTimeAcquired: result.current.dateTimeAcquired,
-          parsedData: result.current.parsedData,
-          rawData: result.current.rawData,
-        });
-    }
+    // database()
+    //   .ref(`/${currentResult.profileId}-${currentResult.hardwareId}`)
+    //   .push({
+    //     macAddress: currentResult.macAddress,
+    //     deviceName: currentResult.deviceName,
+    //     key: currentResult.key,
+    //     value: currentResult.value,
+    //     dateTimeAcquired: currentResult.dateTimeAcquired,
+    //     parsedData: currentResult.parsedData,
+    //     rawData: currentResult.rawData,
+    //   });
+    database()
+      .ref(`/${result.current.profileId}-${result.current.hardwareId}`)
+      .push({
+        macAddress: result.current.macAddress,
+        deviceName: result.current.deviceName,
+        key: result.current.key,
+        value: result.current.value,
+        dateTimeAcquired: result.current.dateTimeAcquired,
+        parsedData: result.current.parsedData,
+        rawData: result.current.rawData,
+      });
+    // }
   }, []);
 
   React.useEffect(() => {
@@ -331,18 +331,18 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
                   rawData: value,
                 };
 
-                results.current.push({
-                  cmdCode: parsedData.cmdCode,
-                  profileId: profile?._id ?? '',
-                  hardwareId: hardware?._id ?? '',
-                  macAddress: currentPeripheral,
-                  deviceName: peripheral.name ?? '',
-                  key: 'Pressure',
-                  value: parsedData.para,
-                  dateTimeAcquired: Date.now(),
-                  parsedData: parsedData,
-                  rawData: value,
-                });
+                // results.current.push({
+                //   cmdCode: parsedData.cmdCode,
+                //   profileId: profile?._id ?? '',
+                //   hardwareId: hardware?._id ?? '',
+                //   macAddress: currentPeripheral,
+                //   deviceName: peripheral.name ?? '',
+                //   key: 'Pressure',
+                //   value: parsedData.para,
+                //   dateTimeAcquired: Date.now(),
+                //   parsedData: parsedData,
+                //   rawData: value,
+                // });
 
                 if (intervalId.current <= 0) {
                   delaySaveResults();
