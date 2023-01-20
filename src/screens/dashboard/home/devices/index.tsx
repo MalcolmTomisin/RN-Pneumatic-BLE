@@ -205,7 +205,7 @@ export default function ListDevices({navigation}: DeviceConnectProps) {
                 fontFamily: appFonts.BARLOW_RG,
                 fontSize: normalize(16),
                 lineHeight: normalize(16 * 1.7),
-                color: appColors.shade3,
+                color: appColors.black,
               }}>{`${v.name ? v.name : 'NO NAME'}`}</Text>
           </TouchableOpacity>
         ))}
