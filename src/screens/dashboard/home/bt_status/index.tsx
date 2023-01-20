@@ -355,10 +355,10 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
                   console.log('Still inflating bladder...');
 
                   getPressureStatus();
-                  // } else {
-                  //   console.log('STOP inflating!');
+                } else {
+                  console.log('STOP inflating!');
 
-                  //   getPressureStatus();
+                  getPressureStatus();
                 }
               } else {
                 console.log(`parsedData: ${JSON.stringify(parsedData)}`);
@@ -446,14 +446,17 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
   const sliderHandler = (value: number) => {
     console.log(`previousSliderPressure = ${sliderPressure}`);
 
-    const hexValue = parseInt(value.toString(16), 16);
-
     setSliderPressure(value);
     targetPressure.current = value;
 
     console.log(`nextSliderPressure = ${value}`);
 
-    inflateHardware(hexValue);
+    const hexValue = parseInt(value.toString(16), 16);
+
+    stopInflation();
+    setTimeout(() => {
+      inflateHardware(hexValue);
+    }, CMD_DELAY);
   };
 
   /**
