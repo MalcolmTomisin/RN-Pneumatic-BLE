@@ -64,9 +64,9 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
     parsedData: {},
     rawData: {},
   };
-  // const result = React.useRef(resultObject);
+  const result = React.useRef(resultObject);
   const intervalId = React.useRef(0);
-  const results = React.useRef<Array<typeof resultObject>>([]);
+  // const results = React.useRef<Array<typeof resultObject>>([]);
 
   React.useLayoutEffect(() => {
     (async () => {
@@ -152,23 +152,34 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
    * This is called every 1 minute.
    */
   const delaySaveResults = React.useCallback(() => {
-    const currentResult = results.current.shift();
+    // const currentResult = results.current.shift();
 
-    if (currentResult) {
-      console.log(`${Date.now()} - delaySaveResults:`, currentResult);
+    // if (currentResult) {
+    console.log(`${Date.now()} - delaySaveResults:`, result.current);
 
-      database()
-        .ref(`/${currentResult.profileId}-${currentResult.hardwareId}`)
-        .push({
-          macAddress: currentResult.macAddress,
-          deviceName: currentResult.deviceName,
-          key: currentResult.key,
-          value: currentResult.value,
-          dateTimeAcquired: currentResult.dateTimeAcquired,
-          parsedData: currentResult.parsedData,
-          rawData: currentResult.rawData,
-        });
-    }
+    // database()
+    //   .ref(`/${currentResult.profileId}-${currentResult.hardwareId}`)
+    //   .push({
+    //     macAddress: currentResult.macAddress,
+    //     deviceName: currentResult.deviceName,
+    //     key: currentResult.key,
+    //     value: currentResult.value,
+    //     dateTimeAcquired: currentResult.dateTimeAcquired,
+    //     parsedData: currentResult.parsedData,
+    //     rawData: currentResult.rawData,
+    //   });
+    database()
+      .ref(`/${result.current.profileId}-${result.current.hardwareId}`)
+      .push({
+        macAddress: result.current.macAddress,
+        deviceName: result.current.deviceName,
+        key: result.current.key,
+        value: result.current.value,
+        dateTimeAcquired: result.current.dateTimeAcquired,
+        parsedData: result.current.parsedData,
+        rawData: result.current.rawData,
+      });
+    // }
   }, []);
 
   React.useEffect(() => {
@@ -226,19 +237,6 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
               //     ToastAndroid.BOTTOM,
               //   );
               // }
-
-              // result.current = {
-              //   cmdCode: parsedData.cmdCode,
-              //   profileId: profile?._id ?? '',
-              //   hardwareId: hardware?._id ?? '',
-              //   macAddress: currentPeripheral,
-              //   deviceName: peripheral.name ?? '',
-              //   key: 'Pressure',
-              //   value: parsedData.para,
-              //   dateTimeAcquired: Date.now(),
-              //   parsedData: parsedData,
-              //   rawData: value,
-              // };
 
               if (parsedData.cmdCode === SLAVE_STATUS_CMD) {
                 console.log(`parsedData: ${JSON.stringify(parsedData)}`);
@@ -320,7 +318,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
                   `currentPressure: ${parsedData.para}, targetPressure: ${targetPressure.current}`,
                 );
 
-                results.current.push({
+                result.current = {
                   cmdCode: parsedData.cmdCode,
                   profileId: profile?._id ?? '',
                   hardwareId: hardware?._id ?? '',
@@ -331,7 +329,20 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
                   dateTimeAcquired: Date.now(),
                   parsedData: parsedData,
                   rawData: value,
-                });
+                };
+
+                // results.current.push({
+                //   cmdCode: parsedData.cmdCode,
+                //   profileId: profile?._id ?? '',
+                //   hardwareId: hardware?._id ?? '',
+                //   macAddress: currentPeripheral,
+                //   deviceName: peripheral.name ?? '',
+                //   key: 'Pressure',
+                //   value: parsedData.para,
+                //   dateTimeAcquired: Date.now(),
+                //   parsedData: parsedData,
+                //   rawData: value,
+                // });
 
                 if (intervalId.current <= 0) {
                   delaySaveResults();
@@ -344,10 +355,10 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
                   console.log('Still inflating bladder...');
 
                   getPressureStatus();
-                  // } else {
-                  //   console.log('STOP inflating!');
+                } else {
+                  console.log('STOP inflating!');
 
-                  //   getPressureStatus();
+                  getPressureStatus();
                 }
               } else {
                 console.log(`parsedData: ${JSON.stringify(parsedData)}`);
@@ -435,14 +446,17 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
   const sliderHandler = (value: number) => {
     console.log(`previousSliderPressure = ${sliderPressure}`);
 
-    const hexValue = parseInt(value.toString(16), 16);
-
     setSliderPressure(value);
     targetPressure.current = value;
 
     console.log(`nextSliderPressure = ${value}`);
 
-    inflateHardware(hexValue);
+    const hexValue = parseInt(value.toString(16), 16);
+
+    stopInflation();
+    setTimeout(() => {
+      inflateHardware(hexValue);
+    }, CMD_DELAY);
   };
 
   /**
