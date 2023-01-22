@@ -7,5 +7,6 @@ public interface Control {
 
     public void cleanup();
 
-    public boolean isConnected(final String ID);
+    // refactor this to use the bluetooth manager API
+    public int getConnectionState();
 }

@@ -75,19 +75,16 @@ public class CompositeBluetoothService extends HeadlessJsTaskService {
             @Override
             public void onBLEConnect() {
                 // #todo display notif or toast of status
-                Toast.makeText(CompositeBluetoothService.this, "Device connected", Toast.LENGTH_SHORT).show();
+
                 Log.d(Utils.TAG, "Connect event run");
             }
 
             @Override
             public void onBLEDisconnect() {
                 // #todo launch retries and handle eventualities
-                Toast.makeText(CompositeBluetoothService.this, "Device disconnected", Toast.LENGTH_SHORT).show();
+
                 Log.d(Utils.TAG, "disconnect event run");
-                for(int i = 0; i < 3; i++){
-                    Log.d(Utils.TAG, "Connection retrying" + " " + i);
-                    controller.connect(PERIPHERAL_ID, CompositeBluetoothService.this);
-                }
+
             }
 
             @Override
@@ -105,27 +102,10 @@ public class CompositeBluetoothService extends HeadlessJsTaskService {
                     e.printStackTrace();
                 }
             }
-        });
-
-        boolean isPeripheralConnected = PERIPHERAL_ID != null && controller.isConnected(PERIPHERAL_ID);
-        if(PERIPHERAL_ID != null && !isPeripheralConnected){
-            Log.d(Utils.TAG, "Controller disconnected");
-            controller.connect(PERIPHERAL_ID, this);
-        }
-        Log.d(Utils.TAG, isPeripheralConnected ? "Connected to peripheral" : "Peripheral not connected");
-        try {
-            Thread.sleep(600);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        if(isPeripheralConnected){
-            try {
-                Thread.sleep(600);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            controller.increasePressure();
-        }
+        }, this, PERIPHERAL_ID);
+        controller.connect();
+        controller.registerForNotifications();
+        controller.increasePressure();
     }
 
     @Override
@@ -262,6 +242,7 @@ public class CompositeBluetoothService extends HeadlessJsTaskService {
     public void onDestroy() {
         super.onDestroy();
         IS_RUNNING = false;
+        controller.cleanup();
     }
 
     private class MyHandlerThread extends HandlerThread {
