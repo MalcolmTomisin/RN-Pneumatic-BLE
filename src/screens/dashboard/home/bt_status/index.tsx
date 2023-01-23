@@ -11,12 +11,18 @@ import {
   EmitterSubscription,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
-import {appColors, appFonts, normalize, normalizeHeight} from 'src/config';
+import {
+  appColors,
+  appFonts,
+  appRoutes,
+  normalize,
+  normalizeHeight,
+} from 'src/config';
 import {StatusScreenProps} from 'src/navigators/dashboard/connect/types';
 import BleManager, {read} from 'react-native-ble-manager';
 import database from '@react-native-firebase/database';
 import {Buffer} from '@craftzdog/react-native-buffer';
-import {parseDataPacket, showToast} from 'src/utils';
+import {disconnectPeripheral, parseDataPacket, showToast} from 'src/utils';
 import {useAppAuth} from 'src/store';
 
 const BleManagerModule = NativeModules.BleManager;
@@ -93,6 +99,14 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
 
             if (!isConnected) {
               navigation.goBack();
+              // navigation.reset({
+              //   index: 0,
+              //   routes: [
+              //     {
+              //       name: appRoutes['Scanned Devices'],
+              //     },
+              //   ],
+              // });
             }
           });
       }
@@ -583,6 +597,26 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
     return crc.toString(16);
   }
 
+  /**
+   *
+   */
+  const disconnectHardware = () => {
+    setTimeout(() => {
+      console.log('STEP 1');
+      disconnectPeripheral(peripheralId);
+      console.log('STEP 2');
+      navigation.reset({
+        index: 0,
+        routes: [
+          {
+            name: appRoutes['Scanned Devices'],
+          },
+        ],
+      });
+      console.log('STEP 3');
+    }, CMD_DELAY);
+  };
+
   return (
     <View
       style={{
@@ -605,7 +639,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
         Device
       </Text> */}
       <Text style={[styles.pale, {color: appColors.black}]}>
-        Set the preferred pressure of the device.
+        Set the pressure of the device by using the slider or buttons.
       </Text>
       {/* <TextInput
         value={userInput}
@@ -623,7 +657,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
         style={{
           borderRadius: normalize(16),
           backgroundColor: appColors.white,
-          marginTop: normalizeHeight(96),
+          marginTop: normalizeHeight(64),
           padding: normalize(16),
         }}>
         <View
@@ -636,7 +670,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
             Battery Status
           </Text>
           <Text style={[styles.title, {color: appColors.label_black}]}>
-            Selected Pressure
+            Device Pressure
           </Text>
         </View>
         <View
@@ -674,24 +708,24 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
             </Text>
           </View>
         </View>
-        <Text
+        {/* <Text
           style={[
             styles.pale,
             {
               color: appColors.black,
-              marginTop: normalize(32),
-              marginBottom: normalize(32),
+              marginVertical: normalize(16),
               textAlign: 'center',
+              fontSize: normalize(16),
             },
           ]}>
           Move slider or tap buttons to adjust pressure
-        </Text>
+        </Text> */}
         <Text
           style={[
             styles.pale,
             {
-              marginTop: normalize(4),
-              marginBottom: normalize(28),
+              marginTop: normalize(32),
+              marginBottom: normalize(16),
               textAlign: 'left',
               color: 'black',
               fontSize: normalize(24),
@@ -766,7 +800,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
         </View>
         <Text
           style={{
-            fontSize: normalize(16),
+            fontSize: normalize(12),
             lineHeight: normalize(16 * 1.5),
             fontFamily: appFonts.BARLOW_BD,
             color: appColors.black,
@@ -774,27 +808,33 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
           MAC Address: {macAddress}
         </Text>
       </View>
-      {/* <TouchableOpacity
-        onPress={() => stopInflation()}
+      <View
         style={{
-          borderRadius: normalize(48),
-          width: normalize(343),
-          backgroundColor: appColors.blueprimary,
           justifyContent: 'center',
           alignItems: 'center',
-          marginTop: normalize(97),
-          height: normalize(56),
         }}>
-        <Text
+        <TouchableOpacity
+          // onPress={disconnectHardware}
           style={{
-            fontSize: normalize(16),
-            lineHeight: normalize(16 * 1.5),
-            fontFamily: appFonts.BARLOW_BD,
-            color: appColors.white,
+            backgroundColor: appColors.blueprimary,
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginTop: normalize(64),
+            borderRadius: normalize(48),
+            width: normalize(148),
+            height: normalize(56),
           }}>
-          TEST: STOP
-        </Text>
-      </TouchableOpacity> */}
+          <Text
+            style={{
+              fontSize: normalize(16),
+              lineHeight: normalize(16 * 1.5),
+              fontFamily: appFonts.BARLOW_BD,
+              color: appColors.white,
+            }}>
+            Disconnect
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
