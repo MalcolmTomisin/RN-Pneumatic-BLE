@@ -67,6 +67,7 @@ export default function Home({navigation}: DeviceScreenProps) {
             PERMISSIONS.ANDROID.BLUETOOTH_ADVERTISE,
             PERMISSIONS.ANDROID.BLUETOOTH_CONNECT,
             PERMISSIONS.ANDROID.BLUETOOTH_SCAN,
+            PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
           ],
     );
     if (isLessThanVersion12) {
@@ -94,6 +95,7 @@ export default function Home({navigation}: DeviceScreenProps) {
               PERMISSIONS.ANDROID.BLUETOOTH_ADVERTISE,
               PERMISSIONS.ANDROID.BLUETOOTH_CONNECT,
               PERMISSIONS.ANDROID.BLUETOOTH_SCAN,
+              PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
             ],
       );
       if (
@@ -139,7 +141,9 @@ export default function Home({navigation}: DeviceScreenProps) {
       />
       <Text style={styles.bold}>Pairing Setup</Text>
       <Text style={[styles.pale, {color: appColors.black}]}>
-        Allow access to your location and bluetooth. Make sure your device is powered on.</Text>
+        Allow access to your location and bluetooth. Make sure your device is
+        powered on.
+      </Text>
       <View style={{marginTop: normalizeHeight(328)}}>
         <Button
           style={[
