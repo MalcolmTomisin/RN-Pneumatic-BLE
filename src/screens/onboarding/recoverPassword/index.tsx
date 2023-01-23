@@ -1,12 +1,13 @@
 import React from 'react';
 import {View, Text} from 'react-native';
-import {appColors, normalize} from 'src/config';
+import {appColors, appRoutes, normalize} from 'src/config';
 import styles from '../../styles';
 import {TextInput, Button} from 'src/components';
 import type {RecoverScreenProps} from 'src/navigators/onboarding/types';
 import {useMutation} from '@tanstack/react-query';
 import {axiosInstance} from 'src/network';
 import {showToast} from 'src/utils';
+import {isAxiosError} from 'axios';
 
 export default function RecoverPassword({navigation}: RecoverScreenProps) {
   const [email, setEmail] = React.useState<string>('');
@@ -18,7 +19,15 @@ export default function RecoverPassword({navigation}: RecoverScreenProps) {
       }),
     {
       onSuccess: () => {
-        showToast('Link has been sent to your email');
+        showToast('Reset link has been sent to your email');
+        navigation.navigate(appRoutes.LOGIN);
+      },
+      onError: err => {
+        if (isAxiosError(err)) {
+          showToast(`${err.response?.data}`);
+          return;
+        }
+        showToast('Network error');
       },
     },
   );
