@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">CustomComposite</string>
+    <string moduleConfig="true" name="CodePushDeploymentKey">CL5ShXNpxO3pdYZ3zD6DSb9Ya0-rBP1O0S1KC</string>
 </resources>
