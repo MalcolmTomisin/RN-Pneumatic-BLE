@@ -99,7 +99,11 @@ export default function Home({navigation}: DeviceScreenProps) {
             ],
       );
       if (
-        permission[PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION] !== RESULTS.GRANTED
+        isLessThanVersion12
+          ? permission[PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION] !==
+            RESULTS.GRANTED
+          : permission[PERMISSIONS.ANDROID.BLUETOOTH_CONNECT] !==
+            RESULTS.GRANTED
       ) {
         const requestAccess = await requestPermissions();
         if (!requestAccess) {
