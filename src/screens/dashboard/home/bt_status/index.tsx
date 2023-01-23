@@ -98,15 +98,15 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
             );
 
             if (!isConnected) {
-              navigation.goBack();
-              // navigation.reset({
-              //   index: 0,
-              //   routes: [
-              //     {
-              //       name: appRoutes['Scanned Devices'],
-              //     },
-              //   ],
-              // });
+              // navigation.goBack();
+              navigation.reset({
+                index: 0,
+                routes: [
+                  {
+                    name: appRoutes.DeviceConnect,
+                  },
+                ],
+              });
             }
           });
       }
@@ -609,7 +609,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
         index: 0,
         routes: [
           {
-            name: appRoutes['Scanned Devices'],
+            name: appRoutes.DeviceConnect,
           },
         ],
       });
@@ -814,7 +814,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
           alignItems: 'center',
         }}>
         <TouchableOpacity
-          // onPress={disconnectHardware}
+          onPress={disconnectHardware}
           style={{
             backgroundColor: appColors.blueprimary,
             justifyContent: 'center',
