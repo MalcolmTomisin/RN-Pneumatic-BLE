@@ -26,8 +26,8 @@ import {DeviceConnectProps} from 'src/navigators/dashboard/connect/types';
 import BleManager from 'react-native-ble-manager';
 import {check, PERMISSIONS, RESULTS} from 'react-native-permissions';
 import {hexToUUID} from 'src/utils';
-import { useAppAuth } from 'src/store';
-import { color } from 'react-native-reanimated';
+import {useAppAuth} from 'src/store';
+import {color} from 'react-native-reanimated';
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
@@ -187,9 +187,16 @@ export default function ListDevices({navigation}: DeviceConnectProps) {
                     ToastAndroid.SHORT,
                     ToastAndroid.BOTTOM,
                   );
-                  navigation.popToTop();
-                  navigation.navigate(appRoutes['Bt Status'], {
-                    peripheralId: v.id,
+                  navigation.reset({
+                    index: 0,
+                    routes: [
+                      {
+                        name: appRoutes['Bt Status'],
+                        params: {
+                          peripheralId: v.id,
+                        },
+                      },
+                    ],
                   });
                 })
                 .catch(() => {
