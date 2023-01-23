@@ -8,113 +8,161 @@
  * @format
  */
 
-import React, {type PropsWithChildren} from 'react';
+import React, {useEffect} from 'react';
+import {NavigationContainer, NavigationState} from '@react-navigation/native';
+import AppNavigator from 'src/navigators';
+import SplashScreen from 'react-native-splash-screen';
+import {Provider as PaperProvider} from 'react-native-paper';
 import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
+  Linking,
+  Platform,
   useColorScheme,
+  InteractionManager,
   View,
+  AppState,
+  NativeModules,
 } from 'react-native';
-
 import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+  CombinedDefaultTheme,
+  CombinedDarkTheme,
+  appConfig,
+  appColors,
+  appRoutes,
+} from 'src/config';
+import {MMKV} from 'react-native-mmkv';
+import {storage, PERSISTENCE_KEY, PERIPHERAL_KEY} from 'src/utils';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import codePush from 'react-native-code-push';
+import {ApiProvider} from 'src/components';
+import {useAppAuth} from 'src/store';
 
-const Section: React.FC<
-  PropsWithChildren<{
-    title: string;
-  }>
-> = ({children, title}) => {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-};
+const Service: {
+  launchService: (arg: string) => void;
+  closeService: () => void;
+} = NativeModules.BluetoothServiceLauncher;
 
 const App = () => {
   const isDarkMode = useColorScheme() === 'dark';
+  const [isReady, setIsReady] = React.useState(false);
+  const [initialState, setInitialState] = React.useState();
+  const theme = isDarkMode ? CombinedDarkTheme : CombinedDefaultTheme;
+  const appState = React.useRef(AppState.currentState);
+  const {hydrateState, peripheralValue} = useAppAuth(state => ({
+    hydrateState: state.hydrateState,
+    peripheralValue: state.peripheralAddress,
+  }));
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+  const handleStateChange = (state?: NavigationState) => {
+    if (state) {
+      // if (
+      //   state.routes[state.index]?.state?.routes[
+      //     state.routes[state?.index]?.state?.index
+      //   ]?.state?.routes[state.routes[state.index]?.state?.routes[
+      //     state.routes[state?.index]?.state?.index
+      //   ]?.state?.index]?.params?.peripheralId
+      // ) {
+      //   peripheralId.current = state.routes[state.index].params?.peripheralId;
+      // }
+      InteractionManager.runAfterInteractions(() => {
+        storage.set(PERSISTENCE_KEY, JSON.stringify(state));
+      });
+    }
   };
 
+  React.useEffect(() => {
+    console.log('peripheralValue -> ', peripheralValue);
+
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (
+        appState.current === 'active' &&
+        nextAppState.match(/inactive|background/)
+      ) {
+        appState.current = nextAppState;
+        //call background service
+        storage.set('APP_AUTH', JSON.stringify(useAppAuth.getState()));
+        if (peripheralValue) {
+          console.log('Service running...');
+          Platform.OS === 'android' && Service.launchService(peripheralValue);
+        }
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [peripheralValue]);
+
+  React.useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextState => {
+      if (nextState === 'active') {
+        appState.current = nextState;
+        Platform.OS === 'android' && Service.closeService();
+        const stringifiedState = storage.getString('APP_AUTH');
+        const persistedState:
+          | {isSignedIn: boolean; token?: string}
+          | undefined = stringifiedState
+          ? JSON.parse(stringifiedState)
+          : undefined;
+
+        if (persistedState) {
+          hydrateState(persistedState);
+        }
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [hydrateState]);
+
+  const restoreState = React.useCallback(async (mmkv: MMKV) => {
+    try {
+      const initialUrl = await Linking.getInitialURL();
+      if (Platform.OS !== 'web' && initialUrl == null) {
+        // Only restore state if there's no deep link and we're not on web
+        const savedStateString = mmkv.getString(PERSISTENCE_KEY);
+        const state = savedStateString
+          ? JSON.parse(savedStateString)
+          : undefined;
+        if (state) {
+          setInitialState(state);
+        }
+      }
+    } finally {
+      setIsReady(true);
+      SplashScreen.hide();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isReady) {
+      restoreState(storage);
+    }
+  }, [isReady, restoreState]);
+
+  if (!isReady && appConfig.IS_ANDROID) {
+    return <View style={{flex: 1, backgroundColor: appColors.background}} />;
+  }
+
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    <GestureHandlerRootView style={{flex: 1}}>
+      <PaperProvider theme={theme}>
+        <NavigationContainer
+          initialState={initialState}
+          onStateChange={handleStateChange}
+          theme={theme}>
+          <ApiProvider>
+            <AppNavigator />
+          </ApiProvider>
+        </NavigationContainer>
+      </PaperProvider>
+    </GestureHandlerRootView>
   );
 };
 
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
+// export default codePush({
+//   checkFrequency: codePush.CheckFrequency.ON_APP_RESUME,
+//   installMode: codePush.InstallMode.IMMEDIATE,
+// })(App);
 
 export default App;

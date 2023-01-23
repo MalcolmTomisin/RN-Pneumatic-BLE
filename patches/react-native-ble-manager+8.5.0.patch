@@ -1,0 +1,31 @@
+diff --git a/node_modules/react-native-ble-manager/android/src/main/java/it/innove/BleManager.java b/node_modules/react-native-ble-manager/android/src/main/java/it/innove/BleManager.java
+index d942914..17c20f1 100644
+--- a/node_modules/react-native-ble-manager/android/src/main/java/it/innove/BleManager.java
++++ b/node_modules/react-native-ble-manager/android/src/main/java/it/innove/BleManager.java
+@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver;
+ import android.content.Context;
+ import android.content.Intent;
+ import android.content.IntentFilter;
++import android.content.SharedPreferences;
+ import android.content.pm.PackageManager;
+ import android.os.Build;
+ 
+@@ -44,6 +45,7 @@ class BleManager extends ReactContextBaseJavaModule {
+ 
+     public static final String LOG_TAG = "ReactNativeBleManager";
+     private static final int ENABLE_REQUEST = 539;
++    private static final String PERIPHERAL_KEY = "KEY12345";
+ 
+     private class BondRequest {
+         private String uuid;
+@@ -282,6 +284,10 @@ class BleManager extends ReactContextBaseJavaModule {
+             callback.invoke("Invalid peripheral uuid");
+             return;
+         }
++        SharedPreferences preferences = getReactApplicationContext().getSharedPreferences("BLEManager", Context.MODE_PRIVATE);
++        SharedPreferences.Editor editor = preferences.edit();
++        editor.putString(PERIPHERAL_KEY, peripheralUUID);
++        editor.apply();
+         peripheral.connect(callback, getCurrentActivity());
+     }
+ 
