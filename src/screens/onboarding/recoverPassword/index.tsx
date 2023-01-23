@@ -24,7 +24,7 @@ export default function RecoverPassword({navigation}: RecoverScreenProps) {
       },
       onError: err => {
         if (isAxiosError(err)) {
-          showToast(`${err.response?.data}`);
+          showToast(`${err.response?.data.message}`);
           return;
         }
         showToast('Network error');
