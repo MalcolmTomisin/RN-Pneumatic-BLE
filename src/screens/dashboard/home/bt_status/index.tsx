@@ -724,16 +724,16 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
           style={[
             styles.pale,
             {
-              marginTop: normalize(32),
+              marginTop: normalize(40),
               marginBottom: normalize(16),
-              textAlign: 'left',
+              textAlign: 'center',
               color: 'black',
               fontSize: normalize(24),
             },
           ]}>
           {sliderPressure}
         </Text>
-        <Slider
+        {/* <Slider
           style={{
             width: '100%',
             height: normalize(8),
@@ -746,13 +746,13 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
           onSlidingComplete={val => {
             sliderHandler(val);
           }}
-        />
+        /> */}
         <View
           style={{
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginTop: normalize(32),
+            marginTop: normalize(16),
             marginBottom: normalize(24),
           }}>
           <TouchableOpacity
