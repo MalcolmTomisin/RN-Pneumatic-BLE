@@ -36,7 +36,7 @@ export default function RecoverPassword({navigation}: RecoverScreenProps) {
     <View style={styles.container}>
       <Text style={styles.bold}>Recover Password</Text>
       <Text style={styles.pale}>
-        Kindly enter email address you signed up with
+        Kindly enter the email address you signed up with.
       </Text>
 
       <TextInput
