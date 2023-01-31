@@ -19,11 +19,12 @@ import {
   normalizeHeight,
 } from 'src/config';
 import {StatusScreenProps} from 'src/navigators/dashboard/connect/types';
-import BleManager, {read} from 'react-native-ble-manager';
+import BleManager from 'react-native-ble-manager';
 import database from '@react-native-firebase/database';
 import {Buffer} from '@craftzdog/react-native-buffer';
 import {disconnectPeripheral, parseDataPacket, showToast} from 'src/utils';
 import {useAppAuth} from 'src/store';
+import {DB_NODE} from '@env';
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
@@ -125,9 +126,9 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
         BleManager.retrieveServices(peripheralId).then(() => {
           BleManager.write(peripheralId, uuid, characteristic_uuid, cmd)
             .then(() => {
-              database().ref('/write').push({
-                write: 'successful',
-              });
+              // database().ref('/write').push({
+              //   write: 'successful',
+              // });
             })
             .catch(e => {
               database().ref('/write').push({e});
@@ -183,7 +184,9 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
     //     rawData: currentResult.rawData,
     //   });
     database()
-      .ref(`/${result.current.profileId}-${result.current.hardwareId}`)
+      .ref(
+        `/${DB_NODE}/${result.current.profileId}-${result.current.hardwareId}`,
+      )
       .push({
         macAddress: result.current.macAddress,
         deviceName: result.current.deviceName,
@@ -230,7 +233,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
               const parsedData = parseDataPacket(buffer);
 
               database()
-                .ref('/debug' + Date.now())
+                .ref('/debug/' + Date.now())
                 .set({
                   parsedData,
                   peripheral: currentPeripheral,

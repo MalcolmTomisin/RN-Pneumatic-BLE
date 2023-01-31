@@ -1,7 +1,6 @@
 // import {API_URL} from '@env';
 import axios, {AxiosInstance} from 'axios';
-
-const API_URL = 'https://custom-pneumatic-web-dev.herokuapp.com';
+import {API_URL} from '@env';
 
 export const axiosInstance: AxiosInstance = axios.create({
   baseURL: API_URL,
