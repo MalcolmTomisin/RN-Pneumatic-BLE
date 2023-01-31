@@ -185,7 +185,11 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
     //   });
     database()
       .ref(
-        `/${DB_NODE}/${result.current.profileId}-${result.current.hardwareId}`,
+        `/${
+          __DEV__
+            ? result.current.profileId
+            : DB_NODE + '/' + result.current.profileId
+        }-${result.current.hardwareId}`,
       )
       .push({
         macAddress: result.current.macAddress,
