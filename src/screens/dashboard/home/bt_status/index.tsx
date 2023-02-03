@@ -12,7 +12,7 @@ import {
   InteractionManager,
   AppState,
 } from 'react-native';
-import Slider from '@react-native-community/slider';
+// import Slider from '@react-native-community/slider';
 import {
   appColors,
   appFonts,
@@ -27,6 +27,7 @@ import {Buffer} from '@craftzdog/react-native-buffer';
 import {disconnectPeripheral, parseDataPacket, showToast} from 'src/utils';
 import {useAppAuth} from 'src/store';
 import {DB_NODE} from '@env';
+import {number} from 'zod';
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
@@ -43,13 +44,13 @@ const START_CMD = 34;
 const STOP_CMD = 35;
 const MASTER_QUERY_PRESSURE_CMD = 36;
 const CMD_DELAY = 500;
-const SAVE_INTERVAL = 10000;
+// const SAVE_INTERVAL = 10000;
 
 export default function Bt_status({route, navigation}: StatusScreenProps) {
   const {peripheralId} = route.params;
   // const batteryStatusDisplayed = React.useRef(false);
   const getInitialPressure = React.useRef(false);
-  const [userInput, setInput] = React.useState('');
+  // const [userInput, setInput] = React.useState('');
   const [batterStatus, setBatterStatus] = React.useState(0);
   const [sliderPressure, setSliderPressure] = React.useState(0);
   const [hardwarePressure, setHardwarePressure] = React.useState(0);
@@ -75,8 +76,11 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
   };
   const result = React.useRef(resultObject);
   const now = React.useRef<number>(Date.now());
+  const writeNow = React.useRef<number>(Date.now());
   const pressureQueue = React.useRef<Array<typeof resultObject>>([]);
+  const cmdQueue = React.useRef<Array<number[]>>([]);
   // const results = React.useRef<Array<typeof resultObject>>([]);
+  const writeFree = React.useRef<boolean>(true);
 
   React.useLayoutEffect(() => {
     (async () => {
@@ -122,16 +126,39 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
    * @param cmd
    */
   const write = React.useCallback(
-    (cmd: Array<number>) => {
-      try {
-        console.log(`Writing command: ${cmd}`);
+    // (cmd: Array<number>) => {
+    () => {
+      InteractionManager.runAfterInteractions(() => {
+        // if (Date.now() - writeNow.current >= CMD_DELAY) {
+        if (writeFree.current) {
+          writeFree.current = false;
+          console.log('Set writeFree to false.');
 
-        BleManager.retrieveServices(peripheralId).then(() => {
-          BleManager.write(peripheralId, uuid, characteristic_uuid, cmd)
-            .then(() => {})
-            .catch(() => {});
-        });
-      } catch (e) {}
+          console.log('QUEUE BEFORE: ', cmdQueue.current);
+          const cmd = cmdQueue.current.shift();
+          console.log('AFTER BEFORE: ', cmdQueue.current);
+
+          if (cmd) {
+            try {
+              console.log(`${Date.now()} - Writing command: ${cmd}`);
+
+              BleManager.retrieveServices(peripheralId).then(() => {
+                BleManager.write(peripheralId, uuid, characteristic_uuid, cmd)
+                  .then(() => {})
+                  .catch(() => {})
+                  .finally(() => {
+                    // writeFree.current = true;
+                  });
+              });
+            } catch (e) {
+            } finally {
+              writeFree.current = true;
+            }
+          } else {
+            writeFree.current = true;
+          }
+        }
+      });
     },
     [peripheralId],
   );
@@ -140,43 +167,136 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
    *
    */
   const getPressureStatus = React.useCallback(() => {
-    setTimeout(() => {
-      console.log('Getting bladder pressure...');
-      try {
-        const length = 0x01;
-        const startCmd = 0x24;
-        const cmdSansCrc = cmdIdentifier.concat([length, startCmd]);
-        const crc = parseInt(calculateCRC(cmdSansCrc), 16);
-        const cmd = cmdSansCrc.concat(crc);
+    console.log('Getting bladder pressure...');
+    try {
+      const length = 0x01;
+      const startCmd = 0x24;
+      const cmdSansCrc = cmdIdentifier.concat([length, startCmd]);
+      const crc = parseInt(calculateCRC(cmdSansCrc), 16);
+      const cmd = cmdSansCrc.concat(crc);
 
-        write(cmd);
-      } catch (e) {
-        //database().ref('/write').push({e, info: 'getPressureStatus failed.'});
-      }
-    }, 500);
+      cmdQueue.current.push(cmd);
+      write();
+    } catch (e) {
+      //database().ref('/write').push({e, info: 'getPressureStatus failed.'});
+      console.log(e);
+    }
   }, [write]);
 
   /**
-   * this operation empties the queue at the scheduled time
+   *
+   * @param peripheralId
+   */
+  const inflateHardware = (value: number) => {
+    InteractionManager.runAfterInteractions(() => {
+      console.log('Inflating bladder...');
+
+      try {
+        const length = 0x0a;
+        const startCmd = 0x22;
+        const pressure = [value, 0x00];
+        const cmdSansCrc = cmdIdentifier.concat(
+          [length, startCmd].concat(
+            pressure.concat(holdTime.concat([0x05, 0x00, 0x00, 0x01, 0x02])),
+          ),
+        );
+        const crc = parseInt(calculateCRC(cmdSansCrc), 16);
+        const cmd = cmdSansCrc.concat(crc);
+
+        cmdQueue.current.push(cmd);
+        // write();
+      } catch (e) {
+        console.log(e);
+      }
+    });
+  };
+
+  /**
+   *
+   */
+  const stopInflation = () => {
+    InteractionManager.runAfterInteractions(() => {
+      console.log('Stopping bladder inflation...');
+
+      try {
+        const length = 0x01;
+        const stopCmd = 0x23;
+        const cmdSansCrc = cmdIdentifier.concat([length, stopCmd]);
+        const crc = parseInt(calculateCRC(cmdSansCrc), 16);
+        const cmd = cmdSansCrc.concat(crc);
+
+        cmdQueue.current.push(cmd);
+        write();
+      } catch (e) {
+        console.log(e);
+      }
+    });
+  };
+
+  /**
+   *
+   */
+  function calculateCRC(data: number[]) {
+    let crc = 0;
+
+    for (let i = 0; i < data.length; i++) {
+      crc ^= data[i] << ((i % 4) * 8);
+    }
+
+    return crc.toString(16);
+  }
+
+  /**
+   *
+   */
+  const disconnectHardware = () => {
+    InteractionManager.runAfterInteractions(() => {
+      console.log('STEP 1');
+      disconnectPeripheral(peripheralId);
+      console.log('STEP 2');
+      navigation.reset({
+        index: 0,
+        routes: [
+          {
+            name: appRoutes.DeviceConnect,
+          },
+        ],
+      });
+      console.log('STEP 3');
+    });
+  };
+
+  /**
+   * This operation empties the queue at the scheduled time
    */
   const emptyQueueResults = React.useCallback(() => {
     InteractionManager.runAfterInteractions(() => {
       if (pressureQueue.current.length > 0) {
         for (let record of pressureQueue.current) {
+          console.log(
+            `DATABASE WRITE: /${
+              __DEV__ ? profile?._id : DB_NODE + '/' + profile?._id
+            }-${hardware?._id}`,
+          );
+
           database()
             .ref(
-              `/${
-                __DEV__
-                  ? result.current.profileId
-                  : DB_NODE + '/' + result.current.profileId
-              }-${result.current.hardwareId}`,
+              // `/${__DEV__ ? profile?._id : DB_NODE + '/' + profile?._id}-${
+              //   hardware?._id
+              // }`,
+              `/${profile?._id}-${hardware?._id}`,
             )
             .push(record);
         }
       }
       pressureQueue.current = [];
     });
-  }, []);
+  }, [hardware?._id, profile?._id]);
+
+  // React.useEffect(() => {
+  //   console.log(`My Ref has changed to: ${writeFree.current}`);
+  //   write();
+  // }, [writeFree, write]);
 
   React.useEffect(() => {
     let bleListener: EmitterSubscription;
@@ -218,15 +338,17 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
                 } else if (parsedData.para === 2) {
                   console.log('2: Start inflation');
 
-                  getPressureStatus();
+                  // getPressureStatus();
                 } else if (parsedData.para === 3) {
                   console.log('3: Start packing');
 
+                  writeFree.current = true;
+                  write();
                   getPressureStatus();
                 } else if (parsedData.para === 4) {
                   console.log('4: Start to deflate');
 
-                  getPressureStatus();
+                  // getPressureStatus();
                 }
               } else if (parsedData.cmdCode === SLAVE_ERR_MSG_CMD) {
                 console.log(`parsedData: ${JSON.stringify(parsedData)}`);
@@ -252,6 +374,9 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
               } else if (parsedData.cmdCode === STOP_CMD) {
                 console.log(`parsedData: ${JSON.stringify(parsedData)}`);
                 console.log(`Code: ${parsedData.cmdCode} - Stop command`);
+
+                writeFree.current = true;
+                write();
               } else if (parsedData.cmdCode === MASTER_QUERY_PRESSURE_CMD) {
                 console.log(`parsedData: ${JSON.stringify(parsedData)}`);
                 console.log(
@@ -287,14 +412,18 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
                   emptyQueueResults();
                 }
 
-                if (parsedData.para <= targetPressure.current) {
+                if (parsedData.para < targetPressure.current) {
                   console.log('Still inflating bladder...');
 
                   getPressureStatus();
-                } else {
-                  console.log('STOP inflating!');
+                } else if (parsedData.para > targetPressure.current) {
+                  console.log('Pressure is higher than what was set...');
 
                   getPressureStatus();
+                  // } else {
+                  //   console.log('STOP inflating!');
+
+                  //   getPressureStatus();
                 }
               } else {
                 console.log(`parsedData: ${JSON.stringify(parsedData)}`);
@@ -319,6 +448,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
     profile?._id,
     setPeripheralValue,
     emptyQueueResults,
+    write,
   ]);
 
   React.useEffect(() => {
@@ -400,87 +530,6 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
 
     stopInflation();
     inflateHardware(hexValue);
-  };
-
-  /**
-   *
-   * @param peripheralId
-   */
-  const inflateHardware = (value: number) => {
-    InteractionManager.runAfterInteractions(() => {
-      console.log('Inflating bladder...');
-
-      try {
-        const length = 0x0a;
-        const startCmd = 0x22;
-        const pressure = [value, 0x00];
-        const cmdSansCrc = cmdIdentifier.concat(
-          [length, startCmd].concat(
-            pressure.concat(holdTime.concat([0x05, 0x00, 0x00, 0x01, 0x02])),
-          ),
-        );
-        const crc = parseInt(calculateCRC(cmdSansCrc), 16);
-        const cmd = cmdSansCrc.concat(crc);
-
-        write(cmd);
-      } catch (e) {
-        console.log(e);
-      }
-    });
-  };
-
-  /**
-   *
-   */
-  const stopInflation = () => {
-    InteractionManager.runAfterInteractions(() => {
-      console.log('Stopping bladder inflation...');
-
-      try {
-        const length = 0x01;
-        const stopCmd = 0x23;
-        const cmdSansCrc = cmdIdentifier.concat([length, stopCmd]);
-        const crc = parseInt(calculateCRC(cmdSansCrc), 16);
-        const cmd = cmdSansCrc.concat(crc);
-
-        write(cmd);
-      } catch (e) {
-        console.log(e);
-      }
-    });
-  };
-
-  /**
-   *
-   */
-  function calculateCRC(data: number[]) {
-    let crc = 0;
-
-    for (let i = 0; i < data.length; i++) {
-      crc ^= data[i] << ((i % 4) * 8);
-    }
-
-    return crc.toString(16);
-  }
-
-  /**
-   *
-   */
-  const disconnectHardware = () => {
-    InteractionManager.runAfterInteractions(() => {
-      console.log('STEP 1');
-      disconnectPeripheral(peripheralId);
-      console.log('STEP 2');
-      navigation.reset({
-        index: 0,
-        routes: [
-          {
-            name: appRoutes.DeviceConnect,
-          },
-        ],
-      });
-      console.log('STEP 3');
-    });
   };
 
   return (
