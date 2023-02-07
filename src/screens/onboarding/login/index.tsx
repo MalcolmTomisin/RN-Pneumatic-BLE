@@ -23,7 +23,7 @@ export default function Login({navigation}: LoginScreenProps) {
     {email: '', password: ''},
   );
   const [secure, setSecure] = useState<boolean>(true);
-  const {setSignIn, setToken, setHardware, setProfile} = useAppAuth(
+  const {setSignIn, setToken, setHardware, setProfile, setStudyId} = useAppAuth(
     state => state,
   );
   const signIn = useMutation(
@@ -40,11 +40,12 @@ export default function Login({navigation}: LoginScreenProps) {
         //#TODO plug in auth token
         try {
           const response = LoginResponseSchema.parse(data);
-          const {profile, hardware, token} = response.data;
+          const {profile, hardware, token, studyId} = response.data;
           setProfile(profile);
           setHardware(hardware);
           setToken(token);
           setSignIn(true);
+          setStudyId(studyId);
         } catch (e) {
           console.log(e);
           showToast('Bad response from service');
