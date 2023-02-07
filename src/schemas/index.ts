@@ -23,6 +23,7 @@ export const LoginResponseSchema = z.object({
     hardware: HardwareSchema,
     token: z.string(),
     when: z.string().datetime(),
+    studyId: z.string(),
   }),
 });
 

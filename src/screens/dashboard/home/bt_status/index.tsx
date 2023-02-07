@@ -56,10 +56,11 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
   const [hardwarePressure, setHardwarePressure] = React.useState(0);
   const [macAddress, setMacAddress] = React.useState('');
   const targetPressure = React.useRef(0);
-  const {profile, hardware, setPeripheralValue} = useAppAuth(state => ({
+  const {profile, hardware, setPeripheralValue, studyId} = useAppAuth(state => ({
     profile: state.profile,
     hardware: state.hardware,
     setPeripheralValue: state.setPeripheralAddress,
+    studyId: state.studyId,
   }));
   const [connected, setConnected] = React.useState<boolean>(false);
   const resultObject = {
@@ -284,14 +285,14 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
               // `/${__DEV__ ? profile?._id : DB_NODE + '/' + profile?._id}-${
               //   hardware?._id
               // }`,
-              `/${profile?._id}-${hardware?._id}`,
+              `/${profile?._id}-${hardware?._id}-${studyId}`,
             )
             .push(record);
         }
       }
       pressureQueue.current = [];
     });
-  }, [hardware?._id, profile?._id]);
+  }, [hardware?._id, profile?._id, studyId]);
 
   // React.useEffect(() => {
   //   console.log(`My Ref has changed to: ${writeFree.current}`);
