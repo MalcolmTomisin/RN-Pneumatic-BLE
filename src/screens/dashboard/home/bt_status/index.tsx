@@ -27,7 +27,7 @@ import {Buffer} from '@craftzdog/react-native-buffer';
 import {disconnectPeripheral, parseDataPacket, showToast} from 'src/utils';
 import {useAppAuth} from 'src/store';
 import {DB_NODE} from '@env';
-import {number} from 'zod';
+// import {number} from 'zod';
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
@@ -43,7 +43,7 @@ const MASTER_QUERY_STATUS_CMD = 33;
 const START_CMD = 34;
 const STOP_CMD = 35;
 const MASTER_QUERY_PRESSURE_CMD = 36;
-const CMD_DELAY = 500;
+// const CMD_DELAY = 500;
 // const SAVE_INTERVAL = 10000;
 
 export default function Bt_status({route, navigation}: StatusScreenProps) {
@@ -74,9 +74,9 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
     parsedData: {},
     rawData: {},
   };
-  const result = React.useRef(resultObject);
+  // const result = React.useRef(resultObject);
   const now = React.useRef<number>(Date.now());
-  const writeNow = React.useRef<number>(Date.now());
+  // const writeNow = React.useRef<number>(Date.now());
   const pressureQueue = React.useRef<Array<typeof resultObject>>([]);
   const cmdQueue = React.useRef<Array<number[]>>([]);
   // const results = React.useRef<Array<typeof resultObject>>([]);
@@ -371,6 +371,10 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
               } else if (parsedData.cmdCode === START_CMD) {
                 console.log(`parsedData: ${JSON.stringify(parsedData)}`);
                 console.log(`Code: ${parsedData.cmdCode} - Start command`);
+
+                writeFree.current = true;
+                write();
+                getPressureStatus();
               } else if (parsedData.cmdCode === STOP_CMD) {
                 console.log(`parsedData: ${JSON.stringify(parsedData)}`);
                 console.log(`Code: ${parsedData.cmdCode} - Stop command`);
@@ -388,9 +392,9 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
                 // const profileId = '8HvXYizoxBXv5BfZN'; // TODO: This is temporary
                 // const hardwareId = 'gTqqYrPmx9jsE6Mub'; // TODO: This is temporary
 
-                console.log(
-                  `Saving data to: /${profile?._id}-${hardware?._id}`,
-                );
+                // console.log(
+                //   `Saving data to: /${profile?._id}-${hardware?._id}`,
+                // );
                 console.log(
                   `currentPressure: ${parsedData.para}, targetPressure: ${targetPressure.current}`,
                 );
