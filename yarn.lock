@@ -1378,6 +1378,13 @@
   resolved "https://registry.yarnpkg.com/@react-native-firebase/database/-/database-16.5.0.tgz#9bb541cd61a519b33f31bb29d5bdcb4605e00bc7"
   integrity sha512-swQeygaKqkkg5j7zkjlzX/yFEtXktBj+Bm3rPAdVEusTgSndZyK3ul8r2ReI97QCNoMZp8G2zsEhfhKYVBt1iA==
 
+"@react-native-firebase/perf@^17.1.0":
+  version "17.1.0"
+  resolved "https://registry.yarnpkg.com/@react-native-firebase/perf/-/perf-17.1.0.tgz#73ef0732644dcaade968682aa316afdc38f8ad55"
+  integrity sha512-MVeHY6Iqqt+vCRacLjbav+MS0VLKjLUoxfj1GiiK8RqQYaRKzD1CXHc/sbe4+S/+CqXRMImgMCbVXo/NITKv+Q==
+  dependencies:
+    "@expo/config-plugins" "^5.0.4"
+
 "@react-native-picker/picker@^2.4.8":
   version "2.4.8"
   resolved "https://registry.yarnpkg.com/@react-native-picker/picker/-/picker-2.4.8.tgz#a1a21f3d6ecadedbc3f0b691a444ddd7baa081f8"
