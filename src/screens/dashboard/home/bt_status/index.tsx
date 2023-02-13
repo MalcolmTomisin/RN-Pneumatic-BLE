@@ -27,7 +27,7 @@ import {Buffer} from '@craftzdog/react-native-buffer';
 import {disconnectPeripheral, parseDataPacket, showToast} from 'src/utils';
 import {useAppAuth} from 'src/store';
 import {DB_NODE} from '@env';
-import {number} from 'zod';
+import perf from '@react-native-firebase/perf';
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
@@ -56,12 +56,14 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
   const [hardwarePressure, setHardwarePressure] = React.useState(0);
   const [macAddress, setMacAddress] = React.useState('');
   const targetPressure = React.useRef(0);
-  const {profile, hardware, setPeripheralValue, studyId} = useAppAuth(state => ({
-    profile: state.profile,
-    hardware: state.hardware,
-    setPeripheralValue: state.setPeripheralAddress,
-    studyId: state.studyId,
-  }));
+  const {profile, hardware, setPeripheralValue, studyId} = useAppAuth(
+    state => ({
+      profile: state.profile,
+      hardware: state.hardware,
+      setPeripheralValue: state.setPeripheralAddress,
+      studyId: state.studyId,
+    }),
+  );
   const [connected, setConnected] = React.useState<boolean>(false);
   const resultObject = {
     cmdCode: 0,
@@ -309,6 +311,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
           uuid,
           characteristic_uuid,
         );
+        const trace = await perf().startTrace('listener_trace');
         bleListener = bleManagerEmitter.addListener(
           'BleManagerDidUpdateValueForCharacteristic',
           ({value, peripheral: currentPeripheral, characteristic, service}) => {
@@ -363,6 +366,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
                 // );
 
                 setBatterStatus(parsedData.para);
+                trace.putMetric('batteryStatus', parsedData.para);
                 // batteryStatusDisplayed.current = true;
               } else if (parsedData.cmdCode === MASTER_QUERY_STATUS_CMD) {
                 console.log(`parsedData: ${JSON.stringify(parsedData)}`);
@@ -383,7 +387,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
                 console.log(
                   `Code: ${parsedData.cmdCode} - The master inquires the slave airbag pressure`,
                 );
-
+                trace.putMetric('BLE status', parsedData.para);
                 setHardwarePressure(parsedData.para);
 
                 // const profileId = '8HvXYizoxBXv5BfZN'; // TODO: This is temporary
@@ -436,6 +440,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
             //console.log(`Received ${data} for characteristic ${characteristic}`);
           },
         );
+        trace.stop();
       })();
 
     return () => {
