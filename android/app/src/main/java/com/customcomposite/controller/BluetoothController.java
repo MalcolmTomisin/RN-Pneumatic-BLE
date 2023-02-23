@@ -39,6 +39,7 @@ public class BluetoothController implements Control {
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private String PERIPHERAL_ID = null;
     private long timeBoundary = System.currentTimeMillis();
+    private boolean write = false;
 
     private final BluetoothGattCallback bluetoothGattCallback = new BluetoothGattCallback() {
         @Override
@@ -58,6 +59,44 @@ public class BluetoothController implements Control {
         }
 
         @Override
+        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+            super.onServicesDiscovered(gatt, status);
+            UUID serviceUUID = UUID.fromString("0000FFF0-0000-1000-8000-00805F9B34FB");
+            UUID charUUID = UUID.fromString("0000FFF6-0000-1000-8000-00805F9B34FB");
+            BluetoothGattService service = gatt.getService(serviceUUID);
+            BluetoothGattCharacteristic characteristic = service.getCharacteristic(charUUID);
+
+            if (this.write) {
+                Log.d(TAG, "write ongoing...");
+                byte[] value = new byte[]{0x55, (byte) 0xaa, 0x01, 0x24, 0x00};
+                characteristic.setValue(value);
+                final boolean success = commandQueue.add(() -> gatt.writeCharacteristic(characteristic));
+
+                if (success) {
+                    Log.d(TAG, "command successfully added to the command queue");
+                    nextCommand();
+                } else {
+                    Log.d(TAG, "operation could not be queued");
+                }
+
+                this.write = false;
+            } else {
+                Log.d(TAG, "registration ongoing...");
+                gatt.setCharacteristicNotification(characteristic, true);
+                BluetoothGattDescriptor descriptor = characteristic.getDescriptor(charUUID);
+                descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                final boolean success = commandQueue.add(() -> gatt.writeDescriptor(descriptor));
+    
+                if(success){
+                    Log.d(TAG, "registration successful");
+                    nextCommand();
+                } else {
+                    Log.d(TAG, "operation could not be queued");
+                }
+            }
+        }
+
+        @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicChanged(gatt, characteristic);
             if (listener != null) {
@@ -65,7 +104,6 @@ public class BluetoothController implements Control {
             }
         }
     };
-
 
     public boolean init(ConnectListener listener, Context serviceContext, String peripheral) {
         this.context = serviceContext;
@@ -108,12 +146,15 @@ public class BluetoothController implements Control {
 
                 }
             }
-            final boolean success = commandQueue.add(() -> bluetoothGatt = device.connectGatt(this.context, false, bluetoothGattCallback));
-            if (success) {
-                nextCommand();
-            } else {
-                Log.d(Utils.TAG, "operation could not be queued");
-            }
+
+            // final boolean success = commandQueue.add(() -> bluetoothGatt = device.connectGatt(this.context, false, bluetoothGattCallback));
+            bluetoothGatt = device.connectGatt(this.context, false, bluetoothGattCallback);
+
+            // if (success) {
+            //     nextCommand();
+            // } else {
+            //     Log.d(Utils.TAG, "operation could not be queued");
+            // }
 
             Log.d(TAG, "Connection successful");
 
@@ -134,24 +175,26 @@ public class BluetoothController implements Control {
 
     @SuppressLint("MissingPermission")
     public void registerForNotifications(){
+        Log.d(TAG, "register for notifications...");
+
         if(bluetoothGatt != null){
             retrieveServices();
-            Log.d(TAG, "registration ongoing...");
-            UUID serviceUUID = UUID.fromString("0000FFF0-0000-1000-8000-00805F9B34FB");
-            UUID charUUID = UUID.fromString("0000FFF6-0000-1000-8000-00805F9B34FB");
-            BluetoothGattService service = bluetoothGatt.getService(serviceUUID);
-            BluetoothGattCharacteristic characteristic = service.getCharacteristic(charUUID);
-            bluetoothGatt.setCharacteristicNotification(characteristic, true);
-            BluetoothGattDescriptor descriptor = characteristic.getDescriptor(charUUID);
-            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-            final boolean success = commandQueue.add(() -> bluetoothGatt.writeDescriptor(descriptor));
+            // Log.d(TAG, "registration ongoing...");
+            // UUID serviceUUID = UUID.fromString("0000FFF0-0000-1000-8000-00805F9B34FB");
+            // UUID charUUID = UUID.fromString("0000FFF6-0000-1000-8000-00805F9B34FB");
+            // BluetoothGattService service = bluetoothGatt.getService(serviceUUID);
+            // BluetoothGattCharacteristic characteristic = service.getCharacteristic(charUUID);
+            // bluetoothGatt.setCharacteristicNotification(characteristic, true);
+            // BluetoothGattDescriptor descriptor = characteristic.getDescriptor(charUUID);
+            // descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+            // final boolean success = commandQueue.add(() -> bluetoothGatt.writeDescriptor(descriptor));
 
-            if(success){
-                Log.d(TAG, "registration successful");
-                nextCommand();
-            } else {
-                Log.d(TAG, "operation could not be queued");
-            }
+            // if(success){
+            //     Log.d(TAG, "registration successful");
+            //     nextCommand();
+            // } else {
+            //     Log.d(TAG, "operation could not be queued");
+            // }
         }
     }
 
@@ -160,23 +203,25 @@ public class BluetoothController implements Control {
     public void increasePressure() {
         if (bluetoothGatt != null) {
             try {
-                Log.d(TAG, "write ongoing...");
-                UUID serviceUUID = UUID.fromString("0000FFF0-0000-1000-8000-00805F9B34FB");
-                UUID charUUID = UUID.fromString("0000FFF6-0000-1000-8000-00805F9B34FB");
-                BluetoothGattService service = bluetoothGatt.getService(serviceUUID);
-                BluetoothGattCharacteristic characteristic = service.getCharacteristic(charUUID);
+                this.write = true;
+                retrieveServices();
 
-                //write value to characteristic
-                byte[] value = new byte[]{0x55, (byte) 0xaa, 0x01, 0x24, 0x00};
-                characteristic.setValue(value);
-                final boolean success = commandQueue.add(() -> bluetoothGatt.writeCharacteristic(characteristic));
+                // UUID serviceUUID = UUID.fromString("0000FFF0-0000-1000-8000-00805F9B34FB");
+                // UUID charUUID = UUID.fromString("0000FFF6-0000-1000-8000-00805F9B34FB");
+                // BluetoothGattService service = bluetoothGatt.getService(serviceUUID);
+                // BluetoothGattCharacteristic characteristic = service.getCharacteristic(charUUID);
 
-                if (success) {
-                    Log.d(TAG, "command successfully added to the command queue");
-                    nextCommand();
-                } else {
-                    Log.d(TAG, "operation could not be queued");
-                }
+                // write value to characteristic
+                // byte[] value = new byte[]{0x55, (byte) 0xaa, 0x01, 0x24, 0x00};
+                // characteristic.setValue(value);
+                // final boolean success = commandQueue.add(() -> bluetoothGatt.writeCharacteristic(characteristic));
+
+                // if (success) {
+                //     Log.d(TAG, "command successfully added to the command queue");
+                //     nextCommand();
+                // } else {
+                //     Log.d(TAG, "operation could not be queued");
+                // }
             } catch (SecurityException e) {
                 e.printStackTrace();
             }
