@@ -48,7 +48,6 @@ const MASTER_QUERY_PRESSURE_CMD = 36;
 
 export default function Bt_status({route, navigation}: StatusScreenProps) {
   const {peripheralId} = route.params;
-  // const batteryStatusDisplayed = React.useRef(false);
   const getInitialPressure = React.useRef(false);
   // const [userInput, setInput] = React.useState('');
   const [batterStatus, setBatterStatus] = React.useState(0);
@@ -279,7 +278,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
           console.log(
             `DATABASE WRITE: /${
               __DEV__ ? profile?._id : DB_NODE + '/' + profile?._id
-            }-${hardware?._id}`,
+            }-${hardware?._id}-${studyId}`,
           );
 
           database()
@@ -341,19 +340,14 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
                   console.log('1: Idle state');
                 } else if (parsedData.para === 2) {
                   console.log('2: Start inflation');
-
-                  // getPressureStatus();
                 } else if (parsedData.para === 3) {
                   console.log('3: Start packing');
-
-                  writeFree.current = true;
-                  write();
-                  getPressureStatus();
                 } else if (parsedData.para === 4) {
                   console.log('4: Start to deflate');
-
-                  // getPressureStatus();
                 }
+
+                writeFree.current = true;
+                write();
               } else if (parsedData.cmdCode === SLAVE_ERR_MSG_CMD) {
                 console.log(`parsedData: ${JSON.stringify(parsedData)}`);
                 console.log(
@@ -373,12 +367,14 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
                 console.log(
                   `Code: ${parsedData.cmdCode} - Master query slave status`,
                 );
+
+                writeFree.current = true;
+                write();
               } else if (parsedData.cmdCode === START_CMD) {
                 console.log(`parsedData: ${JSON.stringify(parsedData)}`);
                 console.log(`Code: ${parsedData.cmdCode} - Start command`);
 
                 writeFree.current = true;
-                write();
                 getPressureStatus();
               } else if (parsedData.cmdCode === STOP_CMD) {
                 console.log(`parsedData: ${JSON.stringify(parsedData)}`);
@@ -424,16 +420,19 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
                 if (parsedData.para < targetPressure.current) {
                   console.log('Still inflating bladder...');
 
-                  getPressureStatus();
+                  // getPressureStatus();
                 } else if (parsedData.para > targetPressure.current) {
                   console.log('Pressure is higher than what was set...');
 
-                  getPressureStatus();
+                  // getPressureStatus();
                   // } else {
                   //   console.log('STOP inflating!');
 
                   //   getPressureStatus();
                 }
+
+                writeFree.current = true;
+                getPressureStatus();
               } else {
                 console.log(`parsedData: ${JSON.stringify(parsedData)}`);
                 console.log(`Code: ${parsedData.cmdCode} - Unknown`);
