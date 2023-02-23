@@ -144,7 +144,12 @@ public class CompositeBluetoothService extends HeadlessJsTaskService {
         }
         Intent stopServiceIntent = new Intent(this, CompositeBluetoothService.class);
         stopServiceIntent.setAction(Utils.ACTION_STOP_SERVICE);
-        PendingIntent stopServicePending = PendingIntent.getService(this, 0, stopServiceIntent, 0);
+        PendingIntent stopServicePending = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            stopServicePending = PendingIntent.getService(this, 0, stopServiceIntent, PendingIntent.FLAG_IMMUTABLE);
+        } else {
+            stopServicePending = PendingIntent.getService(this, 0, stopServiceIntent, 0);
+        }
 
 
         return new NotificationCompat.Builder(this, CHANNEL_ID)
