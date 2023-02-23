@@ -136,6 +136,7 @@ public class BluetoothController implements Control {
     public void registerForNotifications(){
         if(bluetoothGatt != null){
             retrieveServices();
+            Log.d(TAG, "registration ongoing...");
             UUID serviceUUID = UUID.fromString("0000FFF0-0000-1000-8000-00805F9B34FB");
             UUID charUUID = UUID.fromString("0000FFF6-0000-1000-8000-00805F9B34FB");
             BluetoothGattService service = bluetoothGatt.getService(serviceUUID);
@@ -144,9 +145,11 @@ public class BluetoothController implements Control {
             BluetoothGattDescriptor descriptor = characteristic.getDescriptor(charUUID);
             descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
             final boolean success = commandQueue.add(() -> bluetoothGatt.writeDescriptor(descriptor));
+
             if(success){
+                Log.d(TAG, "registration successful");
                 nextCommand();
-            }else {
+            } else {
                 Log.d(TAG, "operation could not be queued");
             }
         }
@@ -157,16 +160,19 @@ public class BluetoothController implements Control {
     public void increasePressure() {
         if (bluetoothGatt != null) {
             try {
+                Log.d(TAG, "write ongoing...");
                 UUID serviceUUID = UUID.fromString("0000FFF0-0000-1000-8000-00805F9B34FB");
                 UUID charUUID = UUID.fromString("0000FFF6-0000-1000-8000-00805F9B34FB");
                 BluetoothGattService service = bluetoothGatt.getService(serviceUUID);
                 BluetoothGattCharacteristic characteristic = service.getCharacteristic(charUUID);
 
-//write value to characteristic
+                //write value to characteristic
                 byte[] value = new byte[]{0x55, (byte) 0xaa, 0x01, 0x24, 0x00};
                 characteristic.setValue(value);
                 final boolean success = commandQueue.add(() -> bluetoothGatt.writeCharacteristic(characteristic));
+
                 if (success) {
+                    Log.d(TAG, "command successfully added to the command queue");
                     nextCommand();
                 } else {
                     Log.d(TAG, "operation could not be queued");
