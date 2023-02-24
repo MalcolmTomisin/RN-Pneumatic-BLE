@@ -66,7 +66,7 @@ public class BluetoothController implements Control {
             BluetoothGattService service = gatt.getService(serviceUUID);
             BluetoothGattCharacteristic characteristic = service.getCharacteristic(charUUID);
 
-            if (this.write) {
+            if (write) {
                 Log.d(TAG, "write ongoing...");
                 byte[] value = new byte[]{0x55, (byte) 0xaa, 0x01, 0x24, 0x00};
                 characteristic.setValue(value);
@@ -79,7 +79,7 @@ public class BluetoothController implements Control {
                     Log.d(TAG, "operation could not be queued");
                 }
 
-                this.write = false;
+                write = false;
             } else {
                 Log.d(TAG, "registration ongoing...");
                 gatt.setCharacteristicNotification(characteristic, true);
@@ -203,7 +203,7 @@ public class BluetoothController implements Control {
     public void increasePressure() {
         if (bluetoothGatt != null) {
             try {
-                this.write = true;
+                write = true;
                 retrieveServices();
 
                 // UUID serviceUUID = UUID.fromString("0000FFF0-0000-1000-8000-00805F9B34FB");
