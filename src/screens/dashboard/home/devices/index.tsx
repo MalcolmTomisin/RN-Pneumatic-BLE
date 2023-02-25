@@ -18,6 +18,7 @@ import {
   appColors,
   appFonts,
   appRoutes,
+  appConfig,
 } from 'src/config';
 import styles from 'src/screens/styles';
 import {bytesToString} from 'convert-string';
@@ -211,7 +212,7 @@ export default function ListDevices({navigation}: DeviceConnectProps) {
               style={{
                 fontFamily: appFonts.BARLOW_RG,
                 fontSize: normalize(16),
-                lineHeight: normalize(16 * 1.7),
+                lineHeight: appConfig.IS_IOS ? undefined : normalize(16 * 1.7),
                 color: appColors.black,
               }}>{`${v.name ? v.name : 'NO NAME'}`}</Text>
           </TouchableOpacity>
