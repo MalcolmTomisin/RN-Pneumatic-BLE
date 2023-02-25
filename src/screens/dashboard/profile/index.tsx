@@ -18,6 +18,7 @@ import {
   appRoutes,
   CombinedDarkTheme,
   CombinedDefaultTheme,
+  appConfig,
 } from 'src/config';
 import ic_shield from 'assets/images/ic_shield.png';
 import {Picker} from '@react-native-picker/picker';
@@ -267,7 +268,7 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontFamily: appFonts.BARLOW_SB,
     fontSize: normalize(14),
-    lineHeight: normalize(14 * 1.7),
+    lineHeight: appConfig.IS_IOS ? undefined : normalize(14 * 1.7),
     color: appColors.label_black,
     textTransform: 'capitalize',
   },
@@ -277,17 +278,17 @@ const styles = StyleSheet.create({
   bold_info: {
     fontFamily: appFonts.BARLOW_SB,
     fontSize: normalize(16),
-    lineHeight: normalize(16 * 1.7),
+    lineHeight: appConfig.IS_IOS ? undefined : normalize(16 * 1.7),
   },
   pale_info: {
     color: appColors.shade3,
     fontFamily: appFonts.BARLOW_RG,
     fontSize: normalize(14),
-    lineHeight: normalize(14 * 1.5),
+    lineHeight: appConfig.IS_IOS ? undefined : normalize(14 * 1.5),
   },
   bold_title: {
     fontSize: normalize(18),
-    lineHeight: normalize(18 * 1.4),
+    lineHeight: appConfig.IS_IOS ? undefined : normalize(18 * 1.4),
     fontFamily: appFonts.BARLOW_BD,
   },
   space_24: {
@@ -296,7 +297,7 @@ const styles = StyleSheet.create({
   btn_text: {
     fontFamily: appFonts.BARLOW_BD,
     fontSize: normalize(14),
-    lineHeight: normalize(14 * 1.5),
+    lineHeight: appConfig.IS_IOS ? undefined : normalize(14 * 1.5),
     //marginRight: normalize(10),
     textAlign: 'right',
   },
@@ -341,7 +342,7 @@ const styles = StyleSheet.create({
   date: {
     fontFamily: appFonts.BARLOW_RG,
     fontSize: normalize(16),
-    lineHeight: normalize(16 * 1.7),
+    lineHeight: appConfig.IS_IOS ? undefined : normalize(16 * 1.7),
   },
   name_highlight: {
     color: appColors.blueprimary,
@@ -365,7 +366,7 @@ const styles = StyleSheet.create({
   list_title: {
     fontFamily: appFonts.BARLOW_BD,
     fontSize: normalize(18),
-    lineHeight: normalize(18 * 1.4),
+    lineHeight: appConfig.IS_IOS ? undefined : normalize(18 * 1.4),
     color: appColors.label_black,
   },
 });

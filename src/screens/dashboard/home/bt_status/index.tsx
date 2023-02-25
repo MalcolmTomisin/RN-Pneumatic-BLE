@@ -15,6 +15,7 @@ import {
 // import Slider from '@react-native-community/slider';
 import {
   appColors,
+  appConfig,
   appFonts,
   appRoutes,
   normalize,
@@ -694,7 +695,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
               style={{
                 fontFamily: appFonts.BARLOW_BD,
                 fontSize: normalize(14),
-                lineHeight: normalize(14 * 1.5),
+                lineHeight: appConfig.IS_IOS ? undefined : normalize(14 * 1.5),
                 color: appColors.cancel_red,
               }}>
               Decrease
@@ -715,7 +716,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
               style={{
                 fontFamily: appFonts.BARLOW_BD,
                 fontSize: normalize(14),
-                lineHeight: normalize(14 * 1.5),
+                lineHeight: appConfig.IS_IOS ? undefined : normalize(14 * 1.5),
                 color: appColors.process_green,
               }}>
               Increase
@@ -725,7 +726,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
         <Text
           style={{
             fontSize: normalize(12),
-            lineHeight: normalize(16 * 1.5),
+            lineHeight: appConfig.IS_IOS ? undefined : normalize(16 * 1.5),
             fontFamily: appFonts.BARLOW_BD,
             color: appColors.black,
           }}>
@@ -751,7 +752,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
           <Text
             style={{
               fontSize: normalize(16),
-              lineHeight: normalize(16 * 1.5),
+              lineHeight: appConfig.IS_IOS ? undefined : normalize(16 * 1.5),
               fontFamily: appFonts.BARLOW_BD,
               color: appColors.white,
             }}>
@@ -767,7 +768,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: appFonts.BARLOW_MD,
     fontSize: normalize(14),
-    lineHeight: normalize(14 * 1.5),
+    lineHeight: appConfig.IS_IOS ? undefined : normalize(14 * 1.5),
   },
   text_container: {
     width: normalize(80),
@@ -778,7 +779,7 @@ const styles = StyleSheet.create({
   pale: {
     fontFamily: appFonts.BARLOW_RG,
     fontSize: normalize(16),
-    lineHeight: normalize(16 * 1.7),
+    lineHeight: appConfig.IS_IOS ? undefined : normalize(16 * 1.7),
     color: appColors.shade3,
     marginTop: normalize(8),
   },
