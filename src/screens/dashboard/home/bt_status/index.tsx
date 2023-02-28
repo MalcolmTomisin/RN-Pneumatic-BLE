@@ -28,6 +28,7 @@ import {disconnectPeripheral, parseDataPacket, showToast} from 'src/utils';
 import {useAppAuth} from 'src/store';
 import {DB_NODE} from '@env';
 import perf from '@react-native-firebase/perf';
+import {number} from 'zod';
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
@@ -43,7 +44,7 @@ const MASTER_QUERY_STATUS_CMD = 33;
 const START_CMD = 34;
 const STOP_CMD = 35;
 const MASTER_QUERY_PRESSURE_CMD = 36;
-// const CMD_DELAY = 500;
+const CMD_DELAY = 500;
 // const SAVE_INTERVAL = 10000;
 
 export default function Bt_status({route, navigation}: StatusScreenProps) {
