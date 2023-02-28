@@ -10,6 +10,8 @@ pod 'GoogleUtilities', :modular_headers => true
 
 target 'CustomComposite' do
   config = use_native_modules!
+  permissions_path = '../node_modules/react-native-permissions/ios'
+  pod 'Permission-BluetoothPeripheral', :path => "#{permissions_path}/BluetoothPeripheral"
 
   # Flags change depending on the env values.
   flags = get_default_flags()
