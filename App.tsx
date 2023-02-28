@@ -27,10 +27,9 @@ import {
   CombinedDarkTheme,
   appConfig,
   appColors,
-  appRoutes,
 } from 'src/config';
 import {MMKV} from 'react-native-mmkv';
-import {storage, PERSISTENCE_KEY, PERIPHERAL_KEY} from 'src/utils';
+import {storage, PERSISTENCE_KEY} from 'src/utils';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import codePush from 'react-native-code-push';
 import {ApiProvider} from 'src/components';
@@ -47,11 +46,15 @@ const App = () => {
   const [initialState, setInitialState] = React.useState();
   const theme = isDarkMode ? CombinedDarkTheme : CombinedDefaultTheme;
   const appState = React.useRef(AppState.currentState);
-  const {hydrateState, peripheralValue} = useAppAuth(state => ({
-    hydrateState: state.hydrateState,
-    peripheralValue: state.peripheralAddress,
-  }));
+  const {hydrateState, peripheralValue, errorMessage, setErrorMessage} =
+    useAppAuth(state => ({
+      hydrateState: state.hydrateState,
+      peripheralValue: state.peripheralAddress,
+      errorMessage: state.errorMessage,
+      setErrorMessage: state.setErrorMessage,
+    }));
 
+  console.log('errrorrr', errorMessage);
   const handleStateChange = (state?: NavigationState) => {
     if (state) {
       // if (
@@ -166,3 +169,5 @@ const App = () => {
 // })(App);
 
 export default App;
+
+const sub1 = useAppAuth.subscribe(console.log);

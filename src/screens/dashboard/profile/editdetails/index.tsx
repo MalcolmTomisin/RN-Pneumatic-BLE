@@ -9,7 +9,7 @@ import {
   Dimensions,
 } from 'react-native';
 import {TextInput} from 'src/components';
-import {appColors, appFonts, normalize} from 'src/config';
+import {appColors, appConfig, appFonts, normalize} from 'src/config';
 import {Picker} from '@react-native-picker/picker';
 import ic_calendar from 'assets/images/ic_calendar.png';
 
@@ -108,13 +108,13 @@ const styles = StyleSheet.create({
   pale: {
     fontFamily: appFonts.BARLOW_MD,
     fontSize: normalize(14),
-    lineHeight: normalize(14 * 1.5),
+    lineHeight: appConfig.IS_IOS ? undefined : normalize(14 * 1.5),
     color: appColors.shade3,
   },
   label: {
     fontFamily: appFonts.BARLOW_MD,
     fontSize: normalize(14),
-    lineHeight: normalize(14 * 1.5),
+    lineHeight: appConfig.IS_IOS ? undefined : normalize(14 * 1.5),
     color: appColors.label_black,
     marginTop: normalize(24),
   },
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
   btn_text: {
     fontFamily: appFonts.BARLOW_BD,
     fontSize: normalize(14),
-    lineHeight: normalize(14 * 1.5),
+    lineHeight: appConfig.IS_IOS ? undefined : normalize(14 * 1.5),
     textAlign: 'center',
   },
   primary_btn: {

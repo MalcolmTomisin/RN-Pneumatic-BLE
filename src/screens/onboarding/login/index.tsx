@@ -52,6 +52,7 @@ export default function Login({navigation}: LoginScreenProps) {
         }
       },
       onError: err => {
+        console.log('wahs');
         if (isAxiosError(err)) {
           showToast('Login failed');
           return;

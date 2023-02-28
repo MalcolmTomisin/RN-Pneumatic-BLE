@@ -1,5 +1,5 @@
 import {StyleSheet} from 'react-native';
-import {appColors, appFonts, normalize} from 'src/config';
+import {appColors, appFonts, normalize, appConfig} from 'src/config';
 
 export default StyleSheet.create({
   container: {
@@ -24,7 +24,7 @@ export default StyleSheet.create({
     color: appColors.label_black,
     fontFamily: appFonts.BARLOW_MD,
     fontSize: normalize(14),
-    lineHeight: normalize(14 * 1.5),
+    lineHeight: appConfig.IS_IOS ? undefined : normalize(14 * 1.5),
     marginBottom: normalize(4),
   },
   focused: {
@@ -40,6 +40,6 @@ export default StyleSheet.create({
     color: appColors.label_black,
     fontFamily: appFonts.BARLOW_MD,
     fontSize: normalize(16),
-    lineHeight: normalize(16 * 1.7),
+    lineHeight: appConfig.IS_IOS ? undefined : normalize(16 * 1.7),
   },
 });

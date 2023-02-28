@@ -1,7 +1,7 @@
 import React from 'react';
 import {createDrawerNavigator} from '@react-navigation/drawer';
 import {Text, StyleSheet, Image, View} from 'react-native';
-import {appColors, appFonts, appRoutes, normalize} from 'src/config';
+import {appColors, appConfig, appFonts, appRoutes, normalize} from 'src/config';
 import profile from 'assets/images/ic_profile.png';
 import exit from 'assets/images/exit.png';
 import compass from 'assets/images/compass.png';
@@ -148,6 +148,6 @@ const styles = StyleSheet.create({
   drawerLabel: {
     fontFamily: appFonts.BARLOW_SB,
     fontSize: normalize(14),
-    lineHeight: normalize(20),
+    lineHeight: appConfig.IS_IOS ? undefined : normalize(20),
   },
 });
