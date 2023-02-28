@@ -50,7 +50,8 @@ export default function Home({navigation}: DeviceScreenProps) {
             {
               text: 'Enable',
               onPress: async () => {
-                await BleManager.enableBluetooth();
+                Platform.OS === 'android' &&
+                  (await BleManager.enableBluetooth());
               },
             },
           ],
@@ -130,7 +131,9 @@ export default function Home({navigation}: DeviceScreenProps) {
         }
       }
       navigation.navigate(appRoutes['Scanned Devices']);
+      return;
     }
+    navigation.navigate(appRoutes['Scanned Devices']);
   };
 
   return (

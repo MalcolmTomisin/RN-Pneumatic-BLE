@@ -1,5 +1,5 @@
 import {StyleSheet} from 'react-native';
-import {appColors, appFonts, normalize} from 'src/config';
+import {appColors, appFonts, normalize, appConfig} from 'src/config';
 
 export default StyleSheet.create({
   button: {
@@ -10,7 +10,7 @@ export default StyleSheet.create({
   buttontext: {
     fontFamily: appFonts.BARLOW_BD,
     fontSize: normalize(16),
-    lineHeight: normalize(16 * 1.5),
+    lineHeight: appConfig.IS_IOS ? undefined : normalize(16 * 1.5),
     color: appColors.white,
   },
 });

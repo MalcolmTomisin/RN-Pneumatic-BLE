@@ -1,5 +1,5 @@
 import {StyleSheet} from 'react-native';
-import {appColors, appFonts, normalize} from 'src/config';
+import {appColors, appConfig, appFonts, normalize} from 'src/config';
 
 export default StyleSheet.create({
   container: {
@@ -11,13 +11,13 @@ export default StyleSheet.create({
     color: appColors.black,
     fontFamily: appFonts.BARLOW_BD,
     fontSize: normalize(28),
-    lineHeight: normalize(28 * 1.4),
+    lineHeight: appConfig.IS_IOS ? undefined : normalize(28 * 1.4),
     textTransform: 'capitalize',
   },
   pale: {
     color: appColors.shade3,
     fontSize: normalize(16),
-    lineHeight: normalize(16 * 1.7),
+    lineHeight: appConfig.IS_IOS ? undefined : normalize(16 * 1.7),
     fontFamily: appFonts.BARLOW_RG,
     marginTop: normalize(8),
     marginBottom: normalize(32),
@@ -25,7 +25,7 @@ export default StyleSheet.create({
   lowerText: {
     fontFamily: appFonts.BARLOW_RG,
     fontSize: normalize(14),
-    lineHeight: normalize(21),
+    lineHeight: appConfig.IS_IOS ? undefined : normalize(21),
     color: appColors.shade3,
     paddingRight: normalize(20),
     marginTop: normalize(162),
@@ -41,7 +41,7 @@ export default StyleSheet.create({
   forgot: {
     fontFamily: appFonts.BARLOW_RG,
     fontSize: normalize(14),
-    lineHeight: normalize(14 * 1.5),
+    lineHeight: appConfig.IS_IOS ? undefined : normalize(14 * 1.5),
     color: appColors.placeholder_grey,
     textAlign: 'center',
   },

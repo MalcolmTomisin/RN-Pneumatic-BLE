@@ -15,7 +15,9 @@ interface AuthState {
   peripheralAddress?: string;
   setPeripheralAddress: (address: string) => void;
   studyId?: string;
-  setStudyId: (arg: string) => void; 
+  setStudyId: (arg: string) => void;
+  errorMessage?: string;
+  setErrorMessage: (errormessage?: string) => void;
 }
 
 const initialState = {
@@ -24,6 +26,7 @@ const initialState = {
   hardware: undefined,
   profile: undefined,
   studyId: undefined,
+  errorMessage: undefined,
 };
 
 export const useAppAuth = create<AuthState>(set => ({
@@ -40,4 +43,6 @@ export const useAppAuth = create<AuthState>(set => ({
   setPeripheralAddress: address =>
     set(state => ({...state, peripheralAddress: address})),
   setStudyId: (studyId: string) => set(state => ({...state, studyId})),
+  setErrorMessage: (message?: string) =>
+    set(state => ({...state, errorMessage: message})),
 }));
