@@ -45,8 +45,9 @@ const MASTER_QUERY_STATUS_CMD = 33;
 const START_CMD = 34;
 const STOP_CMD = 35;
 const MASTER_QUERY_PRESSURE_CMD = 36;
-const CMD_DELAY = 500;
+// const CMD_DELAY = 500;
 // const SAVE_INTERVAL = 10000;
+const INCREMENT = 10;
 
 export default function Bt_status({route, navigation}: StatusScreenProps) {
   const {peripheralId} = route.params;
@@ -493,9 +494,9 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
 
     let nextSliderPressure = 0;
 
-    if (sliderPressure === 20) {
+    if (sliderPressure === INCREMENT) {
       nextSliderPressure = 0;
-    } else if (sliderPressure - 10 >= 20) {
+    } else if (sliderPressure - 10 >= INCREMENT) {
       // if (sliderPressure - 10 >= 0) {
       nextSliderPressure = sliderPressure - 10;
     } else {
@@ -527,9 +528,8 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
     let nextSliderPressure = 0;
 
     if (sliderPressure === 0) {
-      nextSliderPressure = 20;
+      nextSliderPressure = INCREMENT;
     } else if (sliderPressure + 10 <= 200) {
-      // if (sliderPressure + 10 <= 200) {
       nextSliderPressure = sliderPressure + 10;
     } else {
       nextSliderPressure = sliderPressure;
