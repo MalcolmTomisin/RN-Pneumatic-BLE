@@ -45,13 +45,16 @@ const MASTER_QUERY_STATUS_CMD = 33;
 const START_CMD = 34;
 const STOP_CMD = 35;
 const MASTER_QUERY_PRESSURE_CMD = 36;
-// const CMD_DELAY = 500;
+const CMD_DELAY = 500;
 // const SAVE_INTERVAL = 10000;
 const INCREMENT = 10;
+const MIN_PRESSURE = 0;
+const MAX_PRESSURE = 200;
 
 export default function Bt_status({route, navigation}: StatusScreenProps) {
   const {peripheralId} = route.params;
   const getInitialPressure = React.useRef(false);
+  const firstWrite = React.useRef(true);
   // const [userInput, setInput] = React.useState('');
   const [batterStatus, setBatterStatus] = React.useState(0);
   const [sliderPressure, setSliderPressure] = React.useState(0);
@@ -82,7 +85,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
   };
   // const result = React.useRef(resultObject);
   const now = React.useRef<number>(Date.now());
-  // const writeNow = React.useRef<number>(Date.now());
+  const writeNow = React.useRef<number>(Date.now());
   const pressureQueue = React.useRef<Array<typeof resultObject>>([]);
   const cmdQueue = React.useRef<Array<number[]>>([]);
   // const results = React.useRef<Array<typeof resultObject>>([]);
@@ -131,58 +134,85 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
    *
    * @param cmd
    */
-  const write = React.useCallback(
-    // (cmd: Array<number>) => {
-    () => {
-      InteractionManager.runAfterInteractions(() => {
-        // if (Date.now() - writeNow.current >= CMD_DELAY) {
-        if (writeFree.current) {
-          writeFree.current = false;
-          console.log('Set writeFree to false.');
+  const write = React.useCallback(() => {
+    InteractionManager.runAfterInteractions(() => {
+      const delay = Date.now() - writeNow.current;
 
-          console.log('QUEUE BEFORE: ', cmdQueue.current);
-          const cmd = cmdQueue.current.shift();
-          console.log('AFTER BEFORE: ', cmdQueue.current);
+      // console.log(`cmdQueue.current.length: ${cmdQueue.current.length}`);
+      // console.log(`writeFree.current: ${writeFree.current}`);
+      // console.log(`delay: ${delay}`);
+      // console.log(`delay >= CMD_DELAY: ${delay >= CMD_DELAY}\n`);
 
-          if (cmd) {
-            try {
-              console.log(`${Date.now()} - Writing command: ${cmd}`);
+      if (
+        firstWrite.current ||
+        (cmdQueue.current.length > 0 && writeFree.current && delay >= CMD_DELAY)
+      ) {
+        firstWrite.current = false;
+        writeFree.current = false;
+        writeNow.current = Date.now();
 
-              BleManager.retrieveServices(peripheralId).then(() => {
-                BleManager.write(peripheralId, uuid, characteristic_uuid, cmd)
-                  .then(() => {})
-                  .catch(() => {})
-                  .finally(() => {
-                    // writeFree.current = true;
-                  });
+        console.log('QUEUE BEFORE: ', cmdQueue.current);
+        const cmd = cmdQueue.current.shift();
+        console.log('AFTER BEFORE: ', cmdQueue.current);
+        console.log(`${Date.now().toLocaleString()} - Writing command: ${cmd}`);
+
+        try {
+          BleManager.retrieveServices(peripheralId).then(() => {
+            BleManager.write(peripheralId, uuid, characteristic_uuid, cmd)
+              .then(() => {})
+              .catch(() => {})
+              .finally(() => {
+                writeFree.current = true;
+
+                if (cmdQueue.current.length > 1) {
+                  console.log('A. Coming back for another write...');
+                  write();
+                }
               });
-            } catch (e) {
-            } finally {
-              writeFree.current = true;
-            }
-          } else {
-            writeFree.current = true;
+          });
+        } catch (error) {
+          console.log(error);
+        } finally {
+          writeFree.current = true;
+
+          if (cmdQueue.current.length > 1) {
+            console.log('B. Coming back for another write...');
+            write();
           }
         }
-      });
-    },
-    [peripheralId],
-  );
+      } else {
+        // There is a command to execute, however, it is too soon.
+        // Try again later.
+        setTimeout(() => {
+          write();
+        }, delay);
+        // write();
+      }
+    });
+  }, [peripheralId]);
 
   /**
    *
    */
   const getPressureStatus = React.useCallback(() => {
     console.log('Getting bladder pressure...');
+
     try {
       const length = 0x01;
       const startCmd = 0x24;
       const cmdSansCrc = cmdIdentifier.concat([length, startCmd]);
       const crc = parseInt(calculateCRC(cmdSansCrc), 16);
       const cmd = cmdSansCrc.concat(crc);
+      const doesNotExist =
+        JSON.stringify(cmdQueue.current[0]) !== JSON.stringify(cmd);
 
-      cmdQueue.current.push(cmd);
-      write();
+      // console.log(`cmdQueue.current[0]: ${cmdQueue.current[0]}`);
+      // console.log(`cmd: ${cmd}`);
+      // console.log(`cmdQueue.current[0] !== cmd: ${doesNotExist}`);
+      if (doesNotExist) {
+        cmdQueue.current.push(cmd);
+        write();
+      }
     } catch (e) {
       //database().ref('/write').push({e, info: 'getPressureStatus failed.'});
       console.log(e);
@@ -210,7 +240,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
         const cmd = cmdSansCrc.concat(crc);
 
         cmdQueue.current.push(cmd);
-        // write();
+        write();
       } catch (e) {
         console.log(e);
       }
@@ -324,6 +354,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
               if (!getInitialPressure.current) {
                 getInitialPressure.current = true;
 
+                // writeFree.current = true;
                 getPressureStatus();
               }
 
@@ -350,13 +381,14 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
                   console.log('4: Start to deflate');
                 }
 
-                writeFree.current = true;
-                write();
+                // writeFree.current = true;
               } else if (parsedData.cmdCode === SLAVE_ERR_MSG_CMD) {
                 console.log(`parsedData: ${JSON.stringify(parsedData)}`);
                 console.log(
                   `Code: ${parsedData.cmdCode} - Slave error message`,
                 );
+
+                // writeFree.current = true;
               } else if (parsedData.cmdCode === PWR_INFO_CMD) {
                 // console.log(`parsedData: ${JSON.stringify(parsedData)}`);
                 // console.log(
@@ -372,20 +404,19 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
                   `Code: ${parsedData.cmdCode} - Master query slave status`,
                 );
 
-                writeFree.current = true;
-                write();
+                // writeFree.current = true;
               } else if (parsedData.cmdCode === START_CMD) {
                 console.log(`parsedData: ${JSON.stringify(parsedData)}`);
                 console.log(`Code: ${parsedData.cmdCode} - Start command`);
 
-                writeFree.current = true;
+                // writeFree.current = true;
                 getPressureStatus();
               } else if (parsedData.cmdCode === STOP_CMD) {
                 console.log(`parsedData: ${JSON.stringify(parsedData)}`);
                 console.log(`Code: ${parsedData.cmdCode} - Stop command`);
 
-                writeFree.current = true;
-                write();
+                getPressureStatus();
+                // writeFree.current = true;
               } else if (parsedData.cmdCode === MASTER_QUERY_PRESSURE_CMD) {
                 console.log(`parsedData: ${JSON.stringify(parsedData)}`);
                 console.log(
@@ -394,12 +425,6 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
                 trace.putMetric('BLE status', parsedData.para);
                 setHardwarePressure(parsedData.para);
 
-                // const profileId = '8HvXYizoxBXv5BfZN'; // TODO: This is temporary
-                // const hardwareId = 'gTqqYrPmx9jsE6Mub'; // TODO: This is temporary
-
-                // console.log(
-                //   `Saving data to: /${profile?._id}-${hardware?._id}`,
-                // );
                 console.log(
                   `currentPressure: ${parsedData.para}, targetPressure: ${targetPressure.current}`,
                 );
@@ -416,31 +441,25 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
                   parsedData: parsedData,
                   rawData: value,
                 });
-
-                if (Date.now() - now.current >= 10000) {
-                  now.current = Date.now();
-                  emptyQueueResults();
-                }
+                // writeFree.current = true;
 
                 if (parsedData.para < targetPressure.current) {
                   console.log('Still inflating bladder...');
-
-                  // getPressureStatus();
                 } else if (parsedData.para > targetPressure.current) {
                   console.log('Pressure is higher than what was set...');
-
-                  // getPressureStatus();
-                  // } else {
-                  //   console.log('STOP inflating!');
-
-                  //   getPressureStatus();
                 }
 
-                writeFree.current = true;
-                getPressureStatus();
+                if (parsedData.para !== 0 || targetPressure.current !== 0) {
+                  getPressureStatus();
+                }
               } else {
                 console.log(`parsedData: ${JSON.stringify(parsedData)}`);
                 console.log(`Code: ${parsedData.cmdCode} - Unknown`);
+              }
+
+              if (Date.now() - now.current >= 10000) {
+                now.current = Date.now();
+                emptyQueueResults();
               }
             } catch (e) {
               console.log(e);
@@ -492,28 +511,30 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
       `decreasePressureHandler: previousSliderPressure = ${sliderPressure}`,
     );
 
-    let nextSliderPressure = 0;
+    if (sliderPressure !== MIN_PRESSURE) {
+      let nextSliderPressure = 0;
 
-    if (sliderPressure === INCREMENT) {
-      nextSliderPressure = 0;
-    } else if (sliderPressure - 10 >= INCREMENT) {
-      // if (sliderPressure - 10 >= 0) {
-      nextSliderPressure = sliderPressure - 10;
-    } else {
-      nextSliderPressure = sliderPressure;
-    }
+      if (sliderPressure === INCREMENT) {
+        nextSliderPressure = 0;
+      } else if (sliderPressure - 10 >= INCREMENT) {
+        // if (sliderPressure - 10 >= 0) {
+        nextSliderPressure = sliderPressure - 10;
+      } else {
+        nextSliderPressure = sliderPressure;
+      }
 
-    setSliderPressure(nextSliderPressure);
-    targetPressure.current = nextSliderPressure;
+      setSliderPressure(nextSliderPressure);
+      targetPressure.current = nextSliderPressure;
 
-    console.log(`nextSliderPressure = ${nextSliderPressure}`);
+      console.log(`nextSliderPressure = ${nextSliderPressure}`);
 
-    const hexValue = parseInt(nextSliderPressure.toString(16), 16);
+      const hexValue = parseInt(nextSliderPressure.toString(16), 16);
 
-    stopInflation();
+      stopInflation();
 
-    if (hexValue > 0) {
-      inflateHardware(hexValue);
+      if (hexValue > 0) {
+        inflateHardware(hexValue);
+      }
     }
   };
 
@@ -525,25 +546,27 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
       `increasePressureHandler: previousSliderPressure = ${sliderPressure}`,
     );
 
-    let nextSliderPressure = 0;
+    if (sliderPressure !== MAX_PRESSURE) {
+      let nextSliderPressure = 0;
 
-    if (sliderPressure === 0) {
-      nextSliderPressure = INCREMENT;
-    } else if (sliderPressure + 10 <= 200) {
-      nextSliderPressure = sliderPressure + 10;
-    } else {
-      nextSliderPressure = sliderPressure;
+      if (sliderPressure === 0) {
+        nextSliderPressure = INCREMENT;
+      } else if (sliderPressure + 10 <= 200) {
+        nextSliderPressure = sliderPressure + 10;
+      } else {
+        nextSliderPressure = sliderPressure;
+      }
+
+      setSliderPressure(nextSliderPressure);
+      targetPressure.current = nextSliderPressure;
+
+      console.log(`nextSliderPressure = ${nextSliderPressure}`);
+
+      const hexValue = parseInt(nextSliderPressure.toString(16), 16);
+
+      stopInflation();
+      inflateHardware(hexValue);
     }
-
-    setSliderPressure(nextSliderPressure);
-    targetPressure.current = nextSliderPressure;
-
-    console.log(`nextSliderPressure = ${nextSliderPressure}`);
-
-    const hexValue = parseInt(nextSliderPressure.toString(16), 16);
-
-    stopInflation();
-    inflateHardware(hexValue);
   };
 
   return (
