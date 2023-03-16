@@ -617,7 +617,11 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
               },
               styles.text_container,
             ]}>
-            <Text style={[styles.title, {color: appColors.white}]}>
+            <Text
+              style={[
+                styles.title,
+                {color: appColors.white, fontSize: normalize(22)},
+              ]}>
               {batterStatus}%
             </Text>
           </View>
@@ -631,7 +635,10 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
               styles.text_container,
             ]}>
             <Text
-              style={[styles.title, {color: appColors.white}]}
+              style={[
+                styles.title,
+                {color: appColors.white, fontSize: normalize(22)},
+              ]}
               onPress={getPressureStatus}>
               {hardwarePressure}
             </Text>
