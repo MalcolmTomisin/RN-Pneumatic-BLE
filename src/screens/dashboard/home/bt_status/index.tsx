@@ -516,9 +516,9 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
 
       if (sliderPressure === INCREMENT) {
         nextSliderPressure = 0;
-      } else if (sliderPressure - 10 >= INCREMENT) {
+      } else if (sliderPressure - 5 >= INCREMENT) {
         // if (sliderPressure - 10 >= 0) {
-        nextSliderPressure = sliderPressure - 10;
+        nextSliderPressure = sliderPressure - 5;
       } else {
         nextSliderPressure = sliderPressure;
       }
@@ -551,8 +551,8 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
 
       if (sliderPressure === 0) {
         nextSliderPressure = INCREMENT;
-      } else if (sliderPressure + 10 <= 200) {
-        nextSliderPressure = sliderPressure + 10;
+      } else if (sliderPressure + 5 <= 200) {
+        nextSliderPressure = sliderPressure + 5;
       } else {
         nextSliderPressure = sliderPressure;
       }
