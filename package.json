@@ -10,6 +10,8 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "bundlejs": "npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --sourcemap-output android/app/src/main/assets/index.android.map --assets-dest android/app/src/main/res/",
     "build-debug": "(cd android/ && ./gradlew assembleDebug)",
+    "build-release": "(cd android/ && ./gradlew assembleRelease)",
+    "bundle-relase": "(cd android/ && ./gradlew bundleRelease)",
     "postinstall": "patch-package"
   },
   "dependencies": {
