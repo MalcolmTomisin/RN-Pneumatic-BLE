@@ -1,11 +1,9 @@
-import React, {useCallback} from 'react';
+import React from 'react';
 import {
   View,
   Text,
-  Image,
   NativeEventEmitter,
   NativeModules,
-  Platform,
   EmitterSubscription,
   ScrollView,
   ToastAndroid,
@@ -21,51 +19,15 @@ import {
   appConfig,
 } from 'src/config';
 import styles from 'src/screens/styles';
-import {bytesToString} from 'convert-string';
-// import {Button} from 'react-native-paper';
 import {DeviceConnectProps} from 'src/navigators/dashboard/connect/types';
 import BleManager from 'react-native-ble-manager';
-import {check, PERMISSIONS, RESULTS} from 'react-native-permissions';
-import {hexToUUID} from 'src/utils';
 import {useAppAuth} from 'src/store';
-import {color} from 'react-native-reanimated';
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
-const uuid = '0000FFF0-0000-1000-8000-00805F9B34FB';
-const characteristic_uuid = '0000FFF6-0000-1000-8000-00805F9B34FB';
-
-async function connectAndPrepare(
-  peripheral: string,
-  service: string,
-  characteristic: string,
-) {
-  // Connect to device
-  await BleManager.connect(peripheral);
-  // Before startNotification you need to call retrieveServices
-  await BleManager.retrieveServices(peripheral);
-  // To enable BleManagerDidUpdateValueForCharacteristic listener
-  await BleManager.startNotification(peripheral, service, characteristic);
-  // Add event listener
-  bleManagerEmitter.addListener(
-    'BleManagerDidUpdateValueForCharacteristic',
-    ({value, peripheral, characteristic, service}) => {
-      // Convert bytes array to string
-      const data = bytesToString(value);
-      ToastAndroid.showWithGravity(
-        `Received ${data} for characteristic ${characteristic}`,
-        ToastAndroid.SHORT,
-        ToastAndroid.BOTTOM,
-      );
-      console.log(`Received ${data} for characteristic ${characteristic}`);
-    },
-  );
-  // Actions triggering BleManagerDidUpdateValueForCharacteristic event
-}
 
 export default function ListDevices({navigation}: DeviceConnectProps) {
-  const [value, setValue] = React.useState('');
   const [list, setList] = React.useState([]);
   const [isScanning, setIsScanning] = React.useState<boolean>(false);
   const peripherals = new Map();
@@ -115,21 +77,6 @@ export default function ListDevices({navigation}: DeviceConnectProps) {
     //     data.characteristic,
     //   data.value,
     // );
-  };
-
-  const retrieveConnected = () => {
-    BleManager.getConnectedPeripherals([]).then(results => {
-      if (results.length === 0) {
-        console.log('No connected peripherals');
-      }
-      console.log('see results ==>', results);
-      for (var i = 0; i < results.length; i++) {
-        var peripheral = results[i];
-        peripheral.connected = true;
-        peripherals.set(peripheral.id, peripheral);
-        setList(Array.from(peripherals.values()));
-      }
-    });
   };
 
   React.useEffect(() => {
