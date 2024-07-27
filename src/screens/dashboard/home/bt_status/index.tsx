@@ -29,7 +29,6 @@ import {disconnectPeripheral, parseDataPacket, showToast} from 'src/utils';
 import {useAppAuth} from 'src/store';
 import {DB_NODE} from '@env';
 import perf from '@react-native-firebase/perf';
-import {number} from 'zod';
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
