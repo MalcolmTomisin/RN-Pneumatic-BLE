@@ -10,7 +10,6 @@ This repository has been archived and may serve as a resource point for React Na
 - [Introduction](#introduction)
 - [Important Sections](#important-sections)
 - [Installation](#installation)
-- [Usage](#usage)
 - [License](#license)
 - [Contact](#contact)
 - [Acknowledgements](#acknowledgements)
@@ -49,3 +48,12 @@ To set up the project locally, follow these steps:
 3. Install dependencies:
     ```bash
     yarn install
+
+## License
+This project is licensed under the MIT License. See the LICENSE file for more information.
+
+## Contact
+For questions or feedback, please reach out to Malcolm Tomisin via [email](mailto:malcolmtomisin@gmail.com).
+
+## Acknowledgements
+Special thanks to any libraries or frameworks used in this project.
