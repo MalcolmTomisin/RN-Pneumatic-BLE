@@ -22,9 +22,17 @@ This project demonstrates how to integrate Bluetooth Low Energy (BLE) functional
 ## Important Sections
 
 - **Listing Bluetooth devices**: Learn how to scan and list available Bluetooth devices.
+    ```bash
+    src/screens/dashboard/home/devices/index.tsx
 - **Connecting to a Bluetooth device**: Instructions on establishing a connection with a BLE device.
+    ```bash
+    src/screens/dashboard/home/devices/index.tsx
 - **Sending and receiving data from BLEs**: Methods for transmitting and receiving data.
+    ```bash
+    src/screens/dashboard/home/bt_status/index.tsx
 - **Strategies for sending and receiving data through the bridge**: Best practices for data communication.
+    ```bash
+    src/screens/dashboard/home/bt_status/index.tsx
 
 ## Installation
 

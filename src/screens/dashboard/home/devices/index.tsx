@@ -26,7 +26,6 @@ import {useAppAuth} from 'src/store';
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
-
 export default function ListDevices({navigation}: DeviceConnectProps) {
   const [list, setList] = React.useState([]);
   const [isScanning, setIsScanning] = React.useState<boolean>(false);
