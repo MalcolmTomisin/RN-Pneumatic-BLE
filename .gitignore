@@ -68,3 +68,5 @@ buck-out/
 .env.development
 
 android/app/release
+
+*.pepk
