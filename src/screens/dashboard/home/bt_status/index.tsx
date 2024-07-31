@@ -133,14 +133,9 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
    *
    * @param cmd
    */
-  const write = React.useCallback(() => {
+  const writeToBLE = React.useCallback(() => {
     InteractionManager.runAfterInteractions(() => {
       const delay = Date.now() - writeNow.current;
-
-      // console.log(`cmdQueue.current.length: ${cmdQueue.current.length}`);
-      // console.log(`writeFree.current: ${writeFree.current}`);
-      // console.log(`delay: ${delay}`);
-      // console.log(`delay >= CMD_DELAY: ${delay >= CMD_DELAY}\n`);
 
       if (
         firstWrite.current ||
@@ -159,14 +154,8 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
           BleManager.retrieveServices(peripheralId).then(() => {
             BleManager.write(peripheralId, uuid, characteristic_uuid, cmd)
               .then(() => {})
-              .catch(() => {})
-              .finally(() => {
-                writeFree.current = true;
-
-                if (cmdQueue.current.length > 1) {
-                  console.log('A. Coming back for another write...');
-                  write();
-                }
+              .catch(() => {
+                throw new Error('Error writing to ' + peripheralId)
               });
           });
         } catch (error) {
@@ -174,18 +163,17 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
         } finally {
           writeFree.current = true;
 
-          if (cmdQueue.current.length > 1) {
-            console.log('B. Coming back for another write...');
-            write();
+          if (cmdQueue.current.length > 0) {
+            console.log('Coming back for another write...');
+            writeToBLE();
           }
         }
       } else {
         // There is a command to execute, however, it is too soon.
         // Try again later.
         setTimeout(() => {
-          write();
+          writeToBLE();
         }, delay);
-        // write();
       }
     });
   }, [peripheralId]);
@@ -210,13 +198,13 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
       // console.log(`cmdQueue.current[0] !== cmd: ${doesNotExist}`);
       if (doesNotExist) {
         cmdQueue.current.push(cmd);
-        write();
+        writeToBLE();
       }
     } catch (e) {
       //database().ref('/write').push({e, info: 'getPressureStatus failed.'});
       console.log(e);
     }
-  }, [write]);
+  }, [writeToBLE]);
 
   /**
    *
@@ -239,7 +227,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
         const cmd = cmdSansCrc.concat(crc);
 
         cmdQueue.current.push(cmd);
-        write();
+        writeToBLE();
       } catch (e) {
         console.log(e);
       }
@@ -261,7 +249,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
         const cmd = cmdSansCrc.concat(crc);
 
         cmdQueue.current.push(cmd);
-        write();
+        writeToBLE();
       } catch (e) {
         console.log(e);
       }
@@ -481,7 +469,7 @@ export default function Bt_status({route, navigation}: StatusScreenProps) {
     studyId,
     setPeripheralValue,
     emptyQueueResults,
-    write,
+    writeToBLE,
   ]);
 
   React.useEffect(() => {
